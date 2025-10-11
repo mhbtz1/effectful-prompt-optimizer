@@ -14,28 +14,22 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENROUTER_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
 });
 
-export async function callOpenAI({
+export async function callOpenRouter({
   prompt,
-  model = 'gpt-4-turbo-preview',
-  systemPrompt,
+  model,
   temperature = 0.7,
   maxTokens = 1000,
 }: {
   prompt: string;
-  model?: string;
-  systemPrompt?: string;
+  model: string;
   temperature?: number;
   maxTokens?: number;
 }) {
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
-
-  // Add system prompt if provided
-  if (systemPrompt) {
-    messages.push({ role: 'system', content: systemPrompt });
-  }
 
   // Add user prompt
   messages.push({ role: 'user', content: prompt });
@@ -46,12 +40,15 @@ export async function callOpenAI({
       messages,
       temperature,
       max_tokens: maxTokens,
-    });
+    })
 
-    return {
+    const response = {
       response: completion.choices[0]?.message?.content || '',
       model: completion.model,
     };
+
+    console.log(`response: ${JSON.stringify(response)}`)
+    return response
   } catch (error) {
     throw new Error(`OpenAI API Error: ${error instanceof Error ? error.message : String(error)}`);
   }

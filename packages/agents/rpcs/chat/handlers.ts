@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 import { AgentRpcs } from './requests.js';
 import { DataLayerRepo } from '../../../data/src/data.js'
-import { callOpenAI } from '../../src/agent.js';
+import { callOpenRouter } from '../../src/openrouter.js';
 
 
 
@@ -45,7 +45,8 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
             const prompts = yield* service.FetchAgentPrompts({id: args.id, maxCount: maxCount!})
             const effects = prompts!.map(prompt => Effect.tryPromise(async () => {
                 service.FetchAgentPrompts({id: args.id, maxCount: 10})
-                const response = await callOpenAI({prompt, model: args.model})
+                const response = await callOpenRouter({prompt, model: args.model})
+                console.log(`response: ${response}`)
                 return response;
             }).pipe(Effect.provide(DataLayerRepo.Live)))
 
@@ -55,7 +56,18 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
 
     AgentChat: (args: { prompt: string, model: string }) => {
         return Effect.gen(function* () {
-            return callOpenAI({prompt: args.prompt, model: args.model})
+            try {
+                const response = yield* Effect.tryPromise(async () => {
+                    await callOpenRouter({prompt: args.prompt, model: args.model})
+                })
+                yield* Effect.logInfo(`response: ${response}`)
+                return response;
+            } catch (error) {
+                yield* Effect.logInfo(`error: ${error}`)
+                return {
+                    error: JSON.stringify(error)
+                }
+            }
         }).pipe(Effect.provide(DataLayerRepo.Live))
     },
 
