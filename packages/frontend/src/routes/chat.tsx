@@ -30,8 +30,7 @@ function ChatComponent() {
   const { data: agents, isLoading: agentsLoading } = useQuery<Agent[]>({
     queryKey: ['agents'],
     queryFn: async () => {
-      const effect = rpc(ClientRouter.ListAgents({}));
-      return await Effect.runPromise(effect) as Agent[];
+      return await rpc(ClientRouter.ListAgents({}));
     },
   });
 
@@ -51,7 +50,24 @@ function ChatComponent() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submitPromptMutation = useMutation({
+    mutationFn: async ({agentId, prompt}: {agentId: string, prompt: string}) => {
+      const response =await rpc(ClientRouter.AgentSubmitPrompt({
+        agentId: agentId,
+        prompt: prompt
+      }));
+      console.log('Submit prompt response:', response);
+      return response
+    },
+    onSuccess: () => {
+      console.log('Prompt submitted successfully');
+    },
+    onError: (error) => {
+      console.error(`error: ${JSON.stringify(error)}`);
+    }
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -62,6 +78,19 @@ function ChatComponent() {
 
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
+
+    // If an agent is selected, submit the prompt to the prompts table for optimization
+    if (selectedAgent) {
+      console.log('Submitting prompt for agent:', selectedAgent.id);
+      try {
+        submitPromptMutation.mutate({
+          agentId: selectedAgent.id.toString(),
+          prompt: userMessage.content
+        });
+      } catch (error) {
+        console.error(`ERROR: ${JSON.stringify(error)}`);
+      }
+    }
 
     chatMutation.mutate({
       prompt: userMessage.content
