@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Effect } from 'effect';
 import { rpc } from '../rpc-client.js';
 import { ClientRouter } from '../client-router.js';
-import { Trash2, Plus, Loader2 } from 'lucide-react';
 
 export const Route = createFileRoute('/agents')({
   component: RouteComponent,
@@ -24,35 +23,31 @@ function RouteComponent() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    userPrompt: ''
+    originalPrompt: ''
   });
 
   const { data: agents, isLoading, error } = useQuery({
     queryKey: ['agents'],
     queryFn: async () => {
-      const effect = rpc(ClientRouter.ListAgents({}));
-      return await Effect.runPromise(effect);
+      return await rpc(ClientRouter.ListAgents({}));
     },
     refetchInterval: 5000,
   });
 
   const createAgentMutation = useMutation({
-    mutationFn: async (data: { name: string; description: string; userPrompt: string }) => {
-      const effect = rpc(ClientRouter.CreateAgent(data));
-      return await Effect.runPromise(effect);
+    mutationFn: async (data: { name: string, originalPrompt: string }) => {
+      return await rpc(ClientRouter.CreateAgent(data));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
-      setFormData({ name: '', description: '', userPrompt: '' });
+      setFormData({ name: '', originalPrompt: '' });
       setShowCreateForm(false);
     },
   });
 
   const deleteAgentMutation = useMutation({
     mutationFn: async (id: string) => {
-      const effect = rpc(ClientRouter.DeleteAgent({ id }));
-      return await Effect.runPromise(effect);
+      return await rpc(ClientRouter.DeleteAgent({ id }));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
@@ -61,7 +56,7 @@ function RouteComponent() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.description.trim() || !formData.userPrompt.trim()) return;
+    if (!formData.name.trim() || !formData.originalPrompt.trim()) return;
     createAgentMutation.mutate(formData);
   };
 
@@ -83,10 +78,9 @@ function RouteComponent() {
           </div>
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            <span>Create Agent</span>
+            {showCreateForm ? 'Cancel' : '+ Create Agent'}
           </button>
         </div>
 
@@ -107,6 +101,7 @@ function RouteComponent() {
                   required
                 />
               </div>
+              {/*
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
@@ -120,13 +115,14 @@ function RouteComponent() {
                   required
                 />
               </div>
+              */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  User Prompt
+                  System Prompt
                 </label>
                 <textarea
-                  value={formData.userPrompt}
-                  onChange={(e) => setFormData({ ...formData, userPrompt: e.target.value })}
+                  value={formData.originalPrompt}
+                  onChange={(e) => setFormData({ ...formData, originalPrompt: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter the system prompt for this agent"
                   rows={4}
@@ -137,16 +133,15 @@ function RouteComponent() {
                 <button
                   type="submit"
                   disabled={createAgentMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {createAgentMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  <span>Create</span>
+                  {createAgentMutation.isPending ? 'Creating...' : 'Create'}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateForm(false);
-                    setFormData({ name: '', description: '', userPrompt: '' });
+                    setFormData({ name: '', originalPrompt: '' });
                   }}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
                 >
@@ -167,8 +162,8 @@ function RouteComponent() {
         <div className="p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-              <span className="ml-2 text-gray-600">Loading agents...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <span className="ml-3 text-gray-600">Loading agents...</span>
             </div>
           ) : error ? (
             <div className="p-4 bg-red-50 border border-red-200 rounded-md">
@@ -191,7 +186,7 @@ function RouteComponent() {
                         <p className="text-xs font-medium text-gray-500 uppercase mb-1">
                           System Prompt
                         </p>
-                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded border border-gray-200">
+                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded border border-gray-200 whitespace-pre-wrap">
                           {agent.userPrompt}
                         </p>
                       </div>
@@ -206,10 +201,10 @@ function RouteComponent() {
                     <button
                       onClick={() => handleDelete(agent.id)}
                       disabled={deleteAgentMutation.isPending}
-                      className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="ml-4 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed border border-red-200"
                       title="Delete agent"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      Delete
                     </button>
                   </div>
                 </div>

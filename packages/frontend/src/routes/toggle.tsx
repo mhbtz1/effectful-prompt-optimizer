@@ -1,135 +1,127 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
-import { toggleAPI } from '../api/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Effect } from 'effect';
+import { rpc } from '../rpc-client.js';
+import { ClientRouter } from '../client-router.js';
 import { Switch } from '@headlessui/react';
-import { Loader2, Check, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export const Route = createFileRoute('/toggle')({
   component: ToggleComponent,
 });
 
+interface Agent {
+  id: string;
+  name: string;
+  description: string;
+  currentPrompt: string;
+  originalPrompt: string;
+  toggle: boolean;
+  createdAt: string;
+}
+
 function ToggleComponent() {
-  const [featureName, setFeatureName] = useState('');
-  const [enabled, setEnabled] = useState(false);
-  const [result, setResult] = useState<{ feature: string; enabled: boolean } | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: agents, isLoading, error } = useQuery({
+    queryKey: ['agents'],
+    queryFn: async () => {
+      return await rpc(ClientRouter.ListAgents({}));
+    },
+    refetchInterval: 5000,
+  });
 
   const toggleMutation = useMutation({
-    mutationFn: toggleAPI,
-    onSuccess: (data) => {
-      setResult(data);
+    mutationFn: async ({ id, toggle }: { id: string; toggle: boolean }) => {
+      return await rpc(ClientRouter.ToggleAgent({ id, toggle }));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agents'] });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!featureName.trim()) return;
-
-    toggleMutation.mutate({
-      feature: featureName.trim(),
-      enabled,
-    });
+  const handleToggle = (id: string, currentToggle: boolean) => {
+    toggleMutation.mutate({ id, toggle: !currentToggle });
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-2xl font-bold text-gray-900">Feature Toggle</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Agent Optimization Toggle</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Manage feature flags and toggles
+            Enable or disable optimization for each agent. When enabled, the agent's prompts will be optimized automatically.
           </p>
         </div>
 
         <div className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="feature" className="block text-sm font-medium text-gray-700 mb-2">
-                Feature Name
-              </label>
-              <input
-                id="feature"
-                type="text"
-                value={featureName}
-                onChange={(e) => setFeatureName(e.target.value)}
-                placeholder="Enter feature name..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                disabled={toggleMutation.isPending}
-              />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <span className="ml-3 text-gray-600">Loading agents...</span>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <div className="flex items-center space-x-3">
-                <Switch
-                  checked={enabled}
-                  onChange={setEnabled}
-                  disabled={toggleMutation.isPending}
-                  className={`${
-                    enabled ? 'bg-green-600' : 'bg-gray-300'
-                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
+          ) : error ? (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-800">
+                Error loading agents: {(error as Error).message}
+              </p>
+            </div>
+          ) : agents && agents.length > 0 ? (
+            <div className="space-y-3">
+              {agents.map((agent: Agent) => (
+                <div
+                  key={agent.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
-                  <span
-                    className={`${
-                      enabled ? 'translate-x-6' : 'translate-x-1'
-                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                  />
-                </Switch>
-                <span className="text-sm text-gray-700">
-                  {enabled ? 'Enabled' : 'Disabled'}
-                </span>
-              </div>
-            </div>
-
-            {toggleMutation.isError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-800">
-                  Error: {(toggleMutation.error as Error).message}
-                </p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={toggleMutation.isPending || !featureName.trim()}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2"
-            >
-              {toggleMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Updating...</span>
-                </>
-              ) : (
-                <span>Update Toggle</span>
-              )}
-            </button>
-          </form>
-
-          {result && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Feature</p>
-                    <p className="text-lg font-semibold text-gray-900">{result.feature}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {result.enabled ? (
-                      <>
-                        <Check className="w-5 h-5 text-green-600" />
-                        <span className="text-sm font-medium text-green-600">Enabled</span>
-                      </>
-                    ) : (
-                      <>
-                        <X className="w-5 h-5 text-red-600" />
-                        <span className="text-sm font-medium text-red-600">Disabled</span>
-                      </>
-                    )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{agent.description}</p>
+                      <div className="mt-2 text-xs text-gray-500">
+                        <span>ID: {agent.id}</span>
+                        <span className="mx-2">•</span>
+                        <span>Created: {new Date(agent.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="ml-6 flex items-center space-x-3">
+                      <div className="text-right mr-2">
+                        <p className="text-xs font-medium text-gray-500 uppercase">
+                          Optimization
+                        </p>
+                        <p className={`text-sm font-semibold ${agent.toggle ? 'text-green-600' : 'text-gray-500'}`}>
+                          {agent.toggle ? 'Enabled' : 'Disabled'}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={agent.toggle}
+                        onChange={() => handleToggle(agent.id, agent.toggle)}
+                        disabled={toggleMutation.isPending}
+                        className={`${
+                          agent.toggle ? 'bg-green-600' : 'bg-gray-300'
+                        } relative inline-flex h-7 w-12 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        <span
+                          className={`${
+                            agent.toggle ? 'translate-x-6' : 'translate-x-1'
+                          } inline-block h-5 w-5 transform rounded-full bg-white transition-transform`}
+                        />
+                      </Switch>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No agents found. Create your first agent to get started!</p>
+            </div>
+          )}
+
+          {toggleMutation.isError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-800">
+                Error updating toggle: {(toggleMutation.error as Error).message}
+              </p>
             </div>
           )}
         </div>
