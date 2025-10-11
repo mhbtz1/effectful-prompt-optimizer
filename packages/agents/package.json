@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,10 +15,12 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@effect/platform": "^0.92.1",
     "@effect/rpc": "^0.71.0",
     "@openai/agents": "^0.1.9",
     "@supabase/supabase-js": "^2.75.0",
     "dotenv": "^17.2.3",
-    "effect": "^3.18.4"
+    "effect": "^3.18.4",
+    "openai": "^6.3.0"
   }
 }

@@ -21,11 +21,14 @@
     "vite": "^7.1.9"
   },
   "dependencies": {
+    "@effect/platform": "^0.92.1",
+    "@effect/rpc": "^0.71.0",
     "@headlessui/react": "^2.2.9",
     "@tanstack/react-query": "^5.90.2",
     "@tanstack/react-router": "^1.132.47",
     "@tanstack/router-cli": "^1.132.51",
     "@tanstack/router-plugin": "^1.132.51",
+    "effect": "^3.18.4",
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

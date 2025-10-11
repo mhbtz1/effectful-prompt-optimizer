@@ -1,7 +1,15 @@
 import { Effect, Layer} from 'effect';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ES module compatible way to get __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+console.log(process.env)
 
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_KEY!;
@@ -26,14 +34,72 @@ const makeDataLayer = Effect.gen(function* () {
             
 
         }),
+
+        GetAgent: (args: { id: string }) => Effect.gen(function* (){
+            const output = Effect.tryPromise(async () => supabaseClient.from('agents').select('*').eq('id', args.id))
+            return yield* output
+        }),
+
+        DeleteAgent: (args: { id: string }) => Effect.gen(function* (){
+            const output = Effect.tryPromise(async () => supabaseClient.from('agents').delete().eq('id', args.id)).pipe(
+                Effect.flatMap(output => {
+                    if (!output.error) {
+                        return Effect.succeed({key: "success" as const, value: output.data!})
+                    }
+                    return Effect.fail({key: "error" as const, value: "0"})
+                }),
+                Effect.catchAll(error => Effect.fail({key: "error" as const, value: "0"}))
+            )
+            return yield* output
+        }),
+
         ToggleAgent: (args: { id: string, name: string, description: string, userPrompt: string }) => Effect.gen(function* (){
             const output = Effect.tryPromise(async () => supabaseClient.from('agents').update({
                 name: args.name,
                 description: args.description,
                 userPrompt: args.userPrompt
-            }))
-            return output
-        })
+            })).pipe(
+                Effect.flatMap(output => {  
+                    if (!output.error) {
+                        return Effect.succeed({key: "success" as const, value: output.data!})
+                    }
+                    return Effect.fail({key: "error" as const, value: "0"})
+                }),
+                Effect.catchAll(error => Effect.fail({key: "error" as const, value: "0"}))
+            )
+            return yield* output
+        }),
+
+        ListAgents: () => Effect.gen(function* (){
+            const output = yield* Effect.tryPromise(async () => supabaseClient.from('agents').select('*'))
+            if (!output.data) {
+                yield* Effect.fail("ERROR: LIST EMPTY")
+            }
+            
+            return output.data?.map( (agent) => {
+                return {
+                    id: agent.id,
+                    createdAt: agent.created_at,
+                    name: agent.name,
+                    description: agent.description,
+                    userPrompt: agent.user_prompt,
+                    toggle: agent.toggle
+                }
+            })!
+        }),
+
+        FetchAgentPrompts: (args: {id: string, maxCount: number }) => {
+            // policy for optimization: just fetch up to maxCount number of prompts for optimizing, and if less than ta
+            return Effect.tryPromise(async () => {
+                const currentDate = new Date().getTime()
+                const prompts = await supabaseClient.from('prompts').select('*').eq('id', args.id).order('last_optimized', {ascending: false}).limit(args.maxCount)
+                const ids = await prompts.data?.map(prompt => prompt.id)
+                supabaseClient.from('prompts').update({last_optimized: currentDate}).in('id', ids)
+                return prompts.data
+            })
+        }
+
+        
     }
 })
 

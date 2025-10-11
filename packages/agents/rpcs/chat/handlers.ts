@@ -1,6 +1,9 @@
 import { Effect } from 'effect';
-import { AgentRpcs } from './requests';
-import { DataLayerRepo } from '../../../data';
+import { AgentRpcs } from './requests.js';
+import { DataLayerRepo } from '../../../data/src/data.js'
+import { callOpenAI } from '../../src/agent.js';
+
+
 
 export const AgentRpcsLive = AgentRpcs.toLayer({
     CreateAgent: (args: { name: string, description: string, userPrompt: string }) => {
@@ -8,10 +11,6 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
             const service = yield* DataLayerRepo;
             return yield* service.CreateAgent(args)
         }).pipe(Effect.provide(DataLayerRepo.Live))
-    },
-
-    UpdateAgent: (args: { id: string, name: string, description: string, userPrompt: string }) => {
-
     },
 
     DeleteAgent: (args: { id: string }) => {
@@ -28,13 +27,30 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
         }).pipe(Effect.provide(DataLayerRepo.Live))
     },
     
-    ListAgents: (args: { }) => {
+    ListAgents: () => {
         return Effect.gen(function* () {
             const service = yield* DataLayerRepo;
-            return yield* service.ListAgents(args)
+            return yield* service.ListAgents()
         }).pipe(Effect.provide(DataLayerRepo.Live))
     },
-    
-    
+
+    AgentOptimize: (args: { id: string, model: string, maxCount?: number }) => {
+        let maxCount = args.maxCount;
+        if (!args.maxCount ) {
+            maxCount = 10
+        }
+        // policy for fetching prompts to optimize here 
+        return Effect.gen(function* () {
+            const service = yield* DataLayerRepo;
+            const prompts = yield* service.FetchAgentPrompts({id: args.id, maxCount: maxCount!})
+            const effects = prompts!.map(prompt => Effect.tryPromise(async () => {
+                service.FetchAgentPrompts({id: args.id, maxCount: 10})
+                const response = await callOpenAI({prompt, model: args.model})
+                return response;
+            }).pipe(Effect.provide(DataLayerRepo.Live)))
+
+            return yield* Effect.all(effects, {concurrency: 10})
+        })
+    }
 
 })
