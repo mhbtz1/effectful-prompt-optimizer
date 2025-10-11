@@ -28,7 +28,7 @@ export const rpc = (effect: Effect.Effect<any, any, Protocol | Scope>) => {
     ),
     Effect.scoped,
   )
-  return Effect.runSync(eff)
+  return Effect.runPromise(eff)
 }
 
 export const unauthedRpc = <A, E, R>(effect: Effect.Effect<A, E, R>) =>

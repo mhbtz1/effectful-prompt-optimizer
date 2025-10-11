@@ -1,21 +1,35 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { chatAPI, type ChatMessage } from '../api/client';
+import { type ChatMessage } from '../api/client';
 import { Send, Loader2 } from 'lucide-react';
+import { rpc } from '../rpc-client.js';
+import { ClientRouter } from '../client-router.js';
 
 export const Route = createFileRoute('/chat')({
   component: ChatComponent,
 });
 
 function ChatComponent() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<{role: string, content: string}[]>([]);
   const [input, setInput] = useState('');
 
   const chatMutation = useMutation({
-    mutationFn: chatAPI,
-    onSuccess: (data) => {
-      setMessages((prev) => [...prev, data.message]);
+    mutationFn: async ({prompt, model, role}: {prompt: string, model?: string, role?: "user" | "assistant"}) => {
+      const response = await rpc(ClientRouter.AgentChat({
+      prompt: prompt,
+      model: model || "alibaba/tongyi-deepresearch-30b-a3b:free"
+    }))
+
+    let nextRole = "user";
+    if (role === "user") {
+      nextRole = "assistant";
+    }
+    return { role: nextRole, content: response }
+  
+  },
+    onSuccess: ({ role, content }: { role: string, content: string }) => {
+      setMessages((prev) => [...prev, { role, content }]);
     },
   });
 
@@ -32,7 +46,7 @@ function ChatComponent() {
     setInput('');
 
     chatMutation.mutate({
-      messages: [...messages, userMessage],
+      prompt: userMessage.content
     });
   };
 

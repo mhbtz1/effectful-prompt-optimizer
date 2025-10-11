@@ -51,6 +51,12 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
 
             return yield* Effect.all(effects, {concurrency: 10})
         })
-    }
+    },
+
+    AgentChat: (args: { prompt: string, model: string }) => {
+        return Effect.gen(function* () {
+            return callOpenAI({prompt: args.prompt, model: args.model})
+        }).pipe(Effect.provide(DataLayerRepo.Live))
+    },
 
 })

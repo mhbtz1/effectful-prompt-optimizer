@@ -16,12 +16,12 @@ function RouteComponent() {
         refetchInterval: 5000,
     })
 
+  console.log(`data: ${JSON.stringify(data)}`)
   return <div className="flex flex-col items-center justify-center h-screen">
     <h1 className="text-2xl font-bold">Agents</h1>
         {data!.map( (agent: any) => {
             return <span className="p-4 mt-4"> {agent.name} </span>
         })}
         {isLoading && <span>Loading...</span>}
-        {error && <span>Error: {error.message}</span>}
   </div>
 }

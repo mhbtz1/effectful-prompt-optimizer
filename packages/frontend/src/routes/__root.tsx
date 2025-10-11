@@ -1,5 +1,5 @@
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
-import { MessageSquare, Sparkles, ToggleLeft } from 'lucide-react';
+import { MessageSquare, Sparkles, ToggleLeft, Bot } from 'lucide-react';
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -40,6 +40,14 @@ function RootComponent() {
               >
                 <ToggleLeft className="w-4 h-4 mr-2" />
                 Toggle
+              </Link>
+              <Link
+                to="/agents"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                activeProps={{ className: 'text-blue-600 hover:text-blue-700' }}
+              >
+                <Bot className="w-4 h-4 mr-2" />
+                Agents
               </Link>
             </div>
           </div>

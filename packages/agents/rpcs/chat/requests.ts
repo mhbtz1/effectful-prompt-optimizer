@@ -68,5 +68,14 @@ export class AgentRpcs extends RpcGroup.make(
       prompt: S.String,
     })
   }),
+
+  Rpc.make('AgentChat', {
+    success: S.Any,
+    error: S.Any,
+    payload: S.Struct({
+      prompt: S.String,
+      model: S.String
+    })
+  }),
 ) {}
 
