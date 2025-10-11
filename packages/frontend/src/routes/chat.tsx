@@ -21,11 +21,13 @@ function ChatComponent() {
       model: model || "alibaba/tongyi-deepresearch-30b-a3b:free"
     }))
 
+    console.log(`response: ${JSON.stringify(response)}`)
+
     let nextRole = "user";
     if (role === "user") {
       nextRole = "assistant";
     }
-    return { role: nextRole, content: response }
+    return { role: nextRole, content: response.response }
   
   },
     onSuccess: ({ role, content }: { role: string, content: string }) => {
