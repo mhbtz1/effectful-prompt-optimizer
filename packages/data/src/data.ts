@@ -17,13 +17,15 @@ const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
 const makeDataLayer = Effect.gen(function* () {
     return {
-        CreateAgent: (args: { name: string, description: string, userPrompt: string }) => Effect.gen(function* (){
+        CreateAgent: (args: { name: string, originalPrompt: string }) => Effect.gen(function* (){
             return yield* Effect.tryPromise(async () => supabaseClient.from('agents').insert({
                 name: args.name,
-                description: args.description,
-                userPrompt: args.userPrompt
+                original_prompt: args.originalPrompt,
+                current_prompt: args.originalPrompt,
+                toggle: true
             })).pipe(
                 Effect.flatMap(output => {
+                    console.log(`output: ${JSON.stringify(output)}`)
                     if (!output.error) {
                         return Effect.succeed({key: "success" as const, value: output.data!})
                     }
@@ -53,13 +55,11 @@ const makeDataLayer = Effect.gen(function* () {
             return yield* output
         }),
 
-        ToggleAgent: (args: { id: string, name: string, description: string, userPrompt: string }) => Effect.gen(function* (){
+        ToggleAgent: (args: { id: string, toggle: boolean }) => Effect.gen(function* (){
             const output = Effect.tryPromise(async () => supabaseClient.from('agents').update({
-                name: args.name,
-                description: args.description,
-                userPrompt: args.userPrompt
-            })).pipe(
-                Effect.flatMap(output => {  
+                toggle: args.toggle
+            }).eq('id', args.id)).pipe(
+                Effect.flatMap(output => {
                     if (!output.error) {
                         return Effect.succeed({key: "success" as const, value: output.data!})
                     }
@@ -81,8 +81,8 @@ const makeDataLayer = Effect.gen(function* () {
                     id: agent.id,
                     createdAt: agent.created_at,
                     name: agent.name,
-                    description: agent.description,
-                    userPrompt: agent.user_prompt,
+                    currentPrompt: agent.current_prompt,
+                    originalPrompt: agent.original_prompt,
                     toggle: agent.toggle
                 }
             })!
