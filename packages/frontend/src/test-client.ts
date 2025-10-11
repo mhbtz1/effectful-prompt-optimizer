@@ -2,9 +2,6 @@ import { rpc } from './rpc-client';
 import { ClientRouter} from './client-router';
 import { Effect } from 'effect';
 
-const response = rpc(ClientRouter.AgentChat({
-  prompt: 'What is the capital of France?',
-  model: 'alibaba/tongyi-deepresearch-30b-a3b:free',
-}));
+const response = rpc(ClientRouter.ListAgents({}));
 
-console.log(await Effect.runPromise(response))
+console.log(await response)
