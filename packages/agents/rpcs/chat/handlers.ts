@@ -20,6 +20,13 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
         }).pipe(Effect.provide(DataLayerRepo.Live))
     },
 
+    ToggleAgent: (args: { id: string, toggle: boolean }) => {
+        return Effect.gen(function* () {
+            const service = yield* DataLayerRepo;
+            return yield* service.ToggleAgent(args)
+        }).pipe(Effect.provide(DataLayerRepo.Live))
+    },
+
     GetAgent: (args: { id: string }) => {
         return Effect.gen(function* () {
             const service = yield* DataLayerRepo;
@@ -58,12 +65,12 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
         return Effect.gen(function* () {
             try {
                 const response = yield* Effect.tryPromise(async () => {
-                    await callOpenRouter({prompt: args.prompt, model: args.model})
+                    return await callOpenRouter({prompt: args.prompt, model: args.model})
                 })
-                yield* Effect.logInfo(`response: ${response}`)
+                yield* Effect.logInfo(`response: ${JSON.stringify(response)}`)
                 return response;
             } catch (error) {
-                yield* Effect.logInfo(`error: ${error}`)
+                yield* Effect.logInfo(`error: ${JSON.stringify(error)}`)
                 return {
                     error: JSON.stringify(error)
                 }

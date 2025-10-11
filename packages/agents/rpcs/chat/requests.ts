@@ -14,10 +14,9 @@ export class AgentRpcs extends RpcGroup.make(
     }),
     payload: S.Struct({
       name: S.String,
-      description: S.String,
-      userPrompt: S.String
+      originalPrompt: S.String
     })
-  }),
+  }), 
 
   Rpc.make('DeleteAgent', {
     success: S.Union(S.Struct({
@@ -34,6 +33,22 @@ export class AgentRpcs extends RpcGroup.make(
     })
   }),
 
+  Rpc.make('ToggleAgent', {
+    success: S.Union(S.Struct({
+        key: S.Literal("success"),
+        value: S.String
+      }),
+    ),
+    error: S.Struct({
+        key: S.Literal("error"),
+        value: S.String
+    }),
+    payload: S.Struct({
+      id: S.String,
+      toggle: S.Boolean,
+    })
+  }),
+
   Rpc.make('GetAgent', {
     success: S.Any,
     error: S.Any,
@@ -47,9 +62,9 @@ export class AgentRpcs extends RpcGroup.make(
       id: S.Any,
       createdAt: S.Any,
       name: S.Any,
-      description: S.Any, 
-      userPrompt: S.Any, 
-      toggle: S.Any
+      currentPrompt: S.String, 
+      originalPrompt: S.String, 
+      toggle: S.Boolean
     })),
     error: S.Any,
     payload: S.Struct({})
