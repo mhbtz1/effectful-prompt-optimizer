@@ -16,6 +16,7 @@ export const makeBootstrappingRepo = Layer.succeed(BootstrappingRepo, {
                 const output = data.output;
                 const response = yield* program.predict(input);
                 const value = Math.floor(Math.random() * 10);
+                console.log(`Inserting response ${JSON.stringify(response)} into batch ${value}`)
                 batches.set(value, [...(batches.get(value) || []), response]);
             }
             return batches;
