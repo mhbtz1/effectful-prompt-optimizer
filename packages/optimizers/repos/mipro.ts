@@ -1,26 +1,63 @@
-import { Effect } from "effect"
+import { Effect, Layer } from "effect"
 import { DataSchema } from "../schemas/data.js"
-import { ModuleService } from "../services/mipro.js"
+import { BootstrappingRepo, ModuleService, type ModuleServiceProps } from "../services/mipro.js"
+import { OptimizerRepo } from "../index.js"
 
-const makeMIProRepo = Effect.gen(function* () {
-    return {
+
+export const makeBootstrappingRepo = Layer.succeed(BootstrappingRepo, {
+    bootstrap: (
+        program: ModuleServiceProps,
+        trainset: DataSchema,
+    ) => {
+        return Effect.gen(function* () {
+            const batches = new Map<number, any[]>();
+
+            for (const data of trainset) {
+                const input = data.input;
+                const output = data.output;
+                const response = yield* program.predict(input);
+                const value = Math.floor(Math.random() * 10);
+                batches.set(value, [...(batches.get(value) || []), response]);
+            }
+            return batches;
+        })
+    }
+})
+
+export const makeMIProRepo = Layer.succeed(OptimizerRepo, {
         bootstrap: (
-            student: Effect.Effect<ModuleService>,
-            trainset: DataSchema,
-            teacher: Effect.Effect<ModuleService>
-        ) => Effect.succeed(1),
-
-        optimize: (
-            program: Effect.Effect<ModuleService>,
+            student: ModuleServiceProps,
+            teacher: ModuleServiceProps,
+            program: ModuleServiceProps,
             trainset: DataSchema
         ) => {
             return Effect.gen(function* () {
-                const programService = yield* program;
-                // use program for optimization
-            })
+                const batches = new Map<number, any[]>();
 
+                for (const data of trainset) {
+                    const input = data.input;
+                    const output = data.output;
+                    const response = yield* program.predict(input);
+                    const value = Math.floor(Math.random() * 10);
+                    batches.set(value, [...(batches.get(value) || []), response]);
+                }
+                return batches;
+            })
+        },
+
+        optimize: (
+            program: ModuleServiceProps,
+            trainset: DataSchema,
+            bootstrapper: BootstrappingRepoProps
+        ) => {
+
+
+            return Effect.gen(function* () {
+                const programService = yield* ModuleService;
+                // use program for optimization
+                const response = yield* programService.predict(prompt)
+            })
         }
-    }
 })
 
 

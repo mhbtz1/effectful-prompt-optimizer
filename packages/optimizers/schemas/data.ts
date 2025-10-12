@@ -8,8 +8,8 @@ export const ProgramSchema = S.Struct({
 export type ProgramSchema = S.Schema.Type<typeof ProgramSchema>
 
 export const DataSchema = S.Array(S.Struct({
-    generatedResponse: S.String,
-    groundedResponse: S.String
+    input: S.String,
+    output: S.String
 }))
 
 export type DataSchema = S.Schema.Type<typeof DataSchema>

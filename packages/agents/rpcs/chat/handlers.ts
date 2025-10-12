@@ -2,9 +2,9 @@ import { Effect } from 'effect';
 import { AgentRpcs } from './requests.js';
 import { DataLayerRepo } from '../../../data/src/data.js'
 import { callOpenRouter } from '../../src/openrouter.js';
-
+import { ModelSchema } from '../../src/models.js';
 import { OptimizerRepo } from '../../../optimizers/index.js'
-
+import { MODELS } from '../../src/models.js';
 
 export const AgentRpcsLive = AgentRpcs.toLayer({
     CreateAgent: (args: { name: string, originalPrompt: string }) => {
@@ -42,7 +42,7 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
         }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('ListAgents'))
     },
 
-    AgentOptimize: (args: { id: string, model: string, maxCount?: number }) => {
+    AgentOptimize: (args: { id: string, model: string, maxCount?: number, studentModel: ModelSchema, teacherModel: ModelSchema }) => {
         let maxCount = args.maxCount;
         if (!args.maxCount ) {
             maxCount = 10
@@ -53,10 +53,12 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
             const optimizerService = yield* OptimizerRepo;
 
             const prompts = yield* service.FetchAgentPrompts({id: args.id, maxCount: maxCount!})
-            const effects = prompts!.map(prompt => Effect.tryPromise(async () => {
-                service.FetchAgentPrompts({id: args.id, maxCount: 10})
+            const effects = prompts!.map(prompt => Effect.gen(function* () {
+                const optimizerService = yield* OptimizerRepo;
                 
-                const response = await callOpenRouter({prompt, model: args.model})
+                const studentModel = MODELS.get(args.studentModel.model) || MODELS.get("DEFAULT")!
+                const teacherModel = MODELS.get(args.teacherModel.model) || MODELS.get("DEFAULT")!
+                const response = yield* optimizerService.optimize(prompt, studentModel, teacherModel)
                 console.log(`response: ${response}`)
                 return response;
             }).pipe(Effect.provide(DataLayerRepo.Live), Effect.provide(OptimizerRepo.Live), Effect.withSpan('AgentOptimize')))

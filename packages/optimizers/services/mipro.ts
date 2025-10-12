@@ -1,29 +1,40 @@
 import { Effect, Context, Layer } from 'effect';
 import { DataSchema } from '../schemas/data.js';
+import type { UnknownException } from 'effect/Cause';
 
-export class ModuleService extends Context.Tag('ProgramService')<ModuleService, {
-    predict: (
-        signature: string
-    ) => Effect.Effect<string>,
-}> () {
-   
+export interface ModuleServiceProps {
+    predict: (prompt: string) => Effect.Effect<number, UnknownException>
 }
 
-export class OptimizerService extends Context.Tag('Optimizer')<OptimizerService, {
+export interface BootstrappingRepoProps {
     bootstrap: (
-        student: Effect.Effect<ModuleService>,
+        program: ModuleServiceProps,
         trainset: DataSchema,
-        teacher: Effect.Effect<ModuleService>
-    ) => Effect.Effect<void>
+    ) => Effect.Effect<Map<number, any[]>, never>
+}
 
+export interface OptimizerServiceProps {
     optimize: (
-        program: Effect.Effect<ModuleService>,
-        trainset: DataSchema
-    ) => Effect.Effect<number>
+        student: ModuleServiceProps,
+        teacher: ModuleServiceProps,
+        trainset: DataSchema,
+        bootstrapper: BootstrappingRepoProps
+    ) => Effect.Effect<number, UnknownException>
+}
+
+export class ModuleService extends Context.Tag('ModuleService')<ModuleService, ModuleServiceProps> () {}
+
+export class OptimizerService extends Context.Tag('OptimizerService')<OptimizerService, OptimizerServiceProps> () {}
+
+export class BootstrappingRepo extends Context.Tag('BootstrappingRepo')<BootstrappingRepo, {
+    bootstrap: (
+        student: ModuleServiceProps,
+        trainset: DataSchema,
+        teacher: ModuleServiceProps
+    ) => Effect.Effect<Map<number, any[]>>
 }> () {}
 
-
 export class OptimizerRepo extends Context.Tag('OptimizerService')<OptimizerRepo, {
-    optimize: (prompt: string, student: ModuleService, teacher: ModuleService) => Effect.Effect<number>
+    optimize: (prompt: string, student: ModuleServiceProps, teacher: ModuleServiceProps) => Effect.Effect<number>
 }> () {}
 
