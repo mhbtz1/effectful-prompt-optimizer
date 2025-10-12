@@ -3,6 +3,7 @@ import { AgentRpcs } from './requests.js';
 import { DataLayerRepo } from '../../../data/src/data.js'
 import { callOpenRouter } from '../../src/openrouter.js';
 
+import { OptimizerRepo } from '../../../optimizers/index.js'
 
 
 export const AgentRpcsLive = AgentRpcs.toLayer({
@@ -49,13 +50,16 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
         // policy for fetching prompts to optimize here 
         return Effect.gen(function* () {
             const service = yield* DataLayerRepo;
+            const optimizerService = yield* OptimizerRepo;
+
             const prompts = yield* service.FetchAgentPrompts({id: args.id, maxCount: maxCount!})
             const effects = prompts!.map(prompt => Effect.tryPromise(async () => {
                 service.FetchAgentPrompts({id: args.id, maxCount: 10})
+                
                 const response = await callOpenRouter({prompt, model: args.model})
                 console.log(`response: ${response}`)
                 return response;
-            }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('AgentOptimize')))
+            }).pipe(Effect.provide(DataLayerRepo.Live), Effect.provide(OptimizerRepo.Live), Effect.withSpan('AgentOptimize')))
 
             return yield* Effect.all(effects, {concurrency: 10})
         })

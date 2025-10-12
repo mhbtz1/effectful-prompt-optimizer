@@ -1,15 +1,11 @@
 import { Effect, Context, Layer } from 'effect';
+import { ModuleService } from './services/mipro.js';
 
 const makeOptimizerService = Effect.gen(function* () {
-    return {
-        optimize: (prompt: string) => Effect.gen(function* () {
-            return prompt;
-        })
-    }
 })
 
-class OptimizerService extends Context.Tag('OptimizerService')<OptimizerService, Effect.Effect.Success<typeof makeOptimizerService>>() {
-    static readonly Live = Layer.effect(this, makeOptimizerService)
-}
+class OptimizerRepo extends Context.Tag('OptimizerService')<OptimizerRepo, {
+    optimize: (prompt: string, student: ModuleService, teacher: ModuleService) => Effect.Effect<number>
+}> () {}
 
-export { OptimizerService }
+export { OptimizerRepo }

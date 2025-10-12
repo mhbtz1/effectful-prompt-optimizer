@@ -11,14 +11,19 @@ export class ModuleService extends Context.Tag('ProgramService')<ModuleService, 
 
 export class OptimizerService extends Context.Tag('Optimizer')<OptimizerService, {
     bootstrap: (
-        student: ModuleService,
+        student: Effect.Effect<ModuleService>,
         trainset: DataSchema,
-        teacher: ModuleService
+        teacher: Effect.Effect<ModuleService>
     ) => Effect.Effect<void>
 
     optimize: (
-        program: ModuleService,
+        program: Effect.Effect<ModuleService>,
         trainset: DataSchema
     ) => Effect.Effect<number>
+}> () {}
+
+
+export class OptimizerRepo extends Context.Tag('OptimizerService')<OptimizerRepo, {
+    optimize: (prompt: string, student: ModuleService, teacher: ModuleService) => Effect.Effect<number>
 }> () {}
 
