@@ -112,6 +112,9 @@ const makeDataLayer = Effect.gen(function* () {
                 const currentDate = new Date().getTime()
                 const prompts = await supabaseClient.from('prompts').select('*').eq('id', args.id).order('last_optimized', {ascending: false}).limit(args.maxCount)
                 const ids = await prompts.data?.map(prompt => prompt.id)
+                if (!ids) {
+                    return []
+                }
                 supabaseClient.from('prompts').update({last_optimized: currentDate}).in('id', ids)
                 return prompts.data
             })

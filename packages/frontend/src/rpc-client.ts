@@ -1,5 +1,4 @@
 import { FetchHttpClient } from '@effect/platform';
-import { NodeHttpClient } from '@effect/platform-node';
 import { RpcClient, RpcSerialization } from '@effect/rpc';
 import { Protocol } from '@effect/rpc/RpcClient';
 import { Effect, Layer } from 'effect';

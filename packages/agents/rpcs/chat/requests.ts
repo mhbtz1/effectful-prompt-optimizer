@@ -1,5 +1,6 @@
 import { Rpc, RpcGroup } from '@effect/rpc';
 import { Schema as S } from 'effect';
+import { ModelSchema } from '../../../agents/src/models.js';
 
 export class AgentRpcs extends RpcGroup.make(
   Rpc.make('CreateAgent', {
@@ -73,14 +74,16 @@ export class AgentRpcs extends RpcGroup.make(
 
   Rpc.make('AgentOptimize', {
     success: S.Array(S.Struct({
-      response: S.String,
-      model: S.String,
+      score: S.Number,
+      response: S.String
     })),
     error: S.Any,
     payload: S.Struct({
       id: S.String,
       model: S.String,
-      prompt: S.String,
+      maxCount: S.Number,
+      studentModel: ModelSchema,
+      teacherModel: ModelSchema,
     })
   }),
 

@@ -9,6 +9,9 @@ import { createServer } from 'node:http';
 import { AgentRpcs } from '../../agents/rpcs/chat/requests.js';
 import { AgentRpcsLive } from '../../agents/rpcs/chat/handlers.js';
 import { DataLayerRepo } from '../../data/src/data.js';
+import { makeMIProRepo } from '../../optimizers/repos/mipro.js';
+import { makeBootstrappingRepo } from '../../optimizers/repos/mipro.js';
+
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -55,6 +58,8 @@ const POSTRoutes = HttpRouter.empty.pipe(
       Effect.provide(AgentRpcsLive),
       Effect.provide(DataLayerRepo.Live),
       Effect.provide(RpcSerialization.layerNdjson),
+      Effect.provide(makeMIProRepo),
+      Effect.provide(makeBootstrappingRepo),
       Effect.flatten))
 )
 

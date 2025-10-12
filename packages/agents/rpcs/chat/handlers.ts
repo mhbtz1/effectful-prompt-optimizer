@@ -3,7 +3,8 @@ import { AgentRpcs } from './requests.js';
 import { DataLayerRepo } from '../../../data/src/data.js'
 import { callOpenRouter } from '../../src/openrouter.js';
 import { ModelSchema } from '../../src/models.js';
-import { OptimizerRepo } from '../../../optimizers/index.js'
+import { makeMIProRepo, makeBootstrappingRepo } from '../../../optimizers/repos/mipro.js'
+import { OptimizerRepo } from '../../../optimizers/services/mipro.js';
 import { MODELS } from '../../src/models.js';
 
 export const AgentRpcsLive = AgentRpcs.toLayer({
@@ -47,6 +48,7 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
         if (!args.maxCount ) {
             maxCount = 10
         }
+
         // policy for fetching prompts to optimize here 
         return Effect.gen(function* () {
             const service = yield* DataLayerRepo;
@@ -54,14 +56,17 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
 
             const prompts = yield* service.FetchAgentPrompts({id: args.id, maxCount: maxCount!})
             const effects = prompts!.map(prompt => Effect.gen(function* () {
-                const optimizerService = yield* OptimizerRepo;
-                
                 const studentModel = MODELS.get(args.studentModel.model) || MODELS.get("DEFAULT")!
                 const teacherModel = MODELS.get(args.teacherModel.model) || MODELS.get("DEFAULT")!
-                const response = yield* optimizerService.optimize(prompt, studentModel, teacherModel)
-                console.log(`response: ${response}`)
-                return response;
-            }).pipe(Effect.provide(DataLayerRepo.Live), Effect.provide(OptimizerRepo.Live), Effect.withSpan('AgentOptimize')))
+                const response = yield* optimizerService.optimize(
+                    prompt,
+                    studentModel,   
+                    teacherModel, 
+                    undefined
+                ).pipe(Effect.provide(makeBootstrappingRepo))
+
+                return { score: 1, response: response.response }
+            }).pipe(Effect.provide(DataLayerRepo.Live), Effect.provide(makeMIProRepo), Effect.withSpan('AgentOptimize')))
 
             return yield* Effect.all(effects, {concurrency: 10})
         })

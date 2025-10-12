@@ -3,38 +3,26 @@ import { DataSchema } from '../schemas/data.js';
 import type { UnknownException } from 'effect/Cause';
 
 export interface ModuleServiceProps {
-    predict: (prompt: string) => Effect.Effect<number, UnknownException>
+    predict: (prompt: string) => Effect.Effect<{score: number, response: string}, UnknownException>
 }
 
 export interface BootstrappingRepoProps {
     bootstrap: (
         program: ModuleServiceProps,
         trainset: DataSchema,
-    ) => Effect.Effect<Map<number, any[]>, never>
+    ) => Effect.Effect<Map<number, any[]>, UnknownException>
 }
 
-export interface OptimizerServiceProps {
+export interface OptimizerRepoProps {
     optimize: (
+        prompt: string,
         student: ModuleServiceProps,
         teacher: ModuleServiceProps,
-        trainset: DataSchema,
-        bootstrapper: BootstrappingRepoProps
-    ) => Effect.Effect<number, UnknownException>
+        trainset?: DataSchema,
+    ) => Effect.Effect<{ score: number, response: string}, never, BootstrappingRepo>
 }
 
 export class ModuleService extends Context.Tag('ModuleService')<ModuleService, ModuleServiceProps> () {}
-
-export class OptimizerService extends Context.Tag('OptimizerService')<OptimizerService, OptimizerServiceProps> () {}
-
-export class BootstrappingRepo extends Context.Tag('BootstrappingRepo')<BootstrappingRepo, {
-    bootstrap: (
-        student: ModuleServiceProps,
-        trainset: DataSchema,
-        teacher: ModuleServiceProps
-    ) => Effect.Effect<Map<number, any[]>>
-}> () {}
-
-export class OptimizerRepo extends Context.Tag('OptimizerService')<OptimizerRepo, {
-    optimize: (prompt: string, student: ModuleServiceProps, teacher: ModuleServiceProps) => Effect.Effect<number>
-}> () {}
-
+export class OptimizerService extends Context.Tag('OptimizerService')<OptimizerService, OptimizerRepoProps> () {}
+export class BootstrappingRepo extends Context.Tag('BootstrappingRepo')<BootstrappingRepo, BootstrappingRepoProps> () {}
+export class OptimizerRepo extends Context.Tag('OptimizerService')<OptimizerRepo, OptimizerRepoProps> () {}
