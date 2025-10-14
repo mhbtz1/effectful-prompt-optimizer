@@ -8,16 +8,7 @@ export const Route = createFileRoute('/')({
 function IndexComponent() {
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Welcome to Effectful Prompt Optimizer
-        </h1>
-        <p className="text-lg text-gray-600">
-          Choose a feature to get started
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="flex flex-col items-center justify-center gap-6">
         <Link
           to="/chat"
           className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"

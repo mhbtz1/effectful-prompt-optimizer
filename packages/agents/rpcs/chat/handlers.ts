@@ -22,6 +22,14 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
         }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('DeleteAgent'))
     },
 
+    EditAgent: (args: { id: string, newPrompt: string }) => {
+
+        return Effect.gen(function* () {
+            const service = yield* DataLayerRepo;
+            return yield* service.EditAgent(args)
+        }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('EditAgent'))
+    },
+
     ToggleAgent: (args: { id: string, toggle: boolean }) => {
         return Effect.gen(function* () {
             const service = yield* DataLayerRepo;

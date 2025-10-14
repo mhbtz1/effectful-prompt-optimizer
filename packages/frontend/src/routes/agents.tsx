@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Effect } from 'effect';
+import { toast } from 'sonner'
 import { rpc } from '../rpc-client.js';
 import { ClientRouter } from '../client-router.js';
 
@@ -21,9 +21,14 @@ interface Agent {
 function RouteComponent() {
   const queryClient = useQueryClient();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [selectedEditAgent, setSelectedEditAgent] = useState<Agent | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     originalPrompt: ''
+  });
+  const [editFormData, setEditFormData] = useState({
+    newPrompt: ''
   });
 
   const { data: agents, isLoading, error } = useQuery({
@@ -31,9 +36,8 @@ function RouteComponent() {
     queryFn: async () => {
       return await rpc(ClientRouter.ListAgents({}));
     },
-    refetchInterval: 5000,
+    refetchInterval: false,
   });
-
   const createAgentMutation = useMutation({
     mutationFn: async (data: { name: string, originalPrompt: string }) => {
       return await rpc(ClientRouter.CreateAgent(data));
@@ -44,7 +48,6 @@ function RouteComponent() {
       setShowCreateForm(false);
     },
   });
-
   const deleteAgentMutation = useMutation({
     mutationFn: async (id: string) => {
       return await rpc(ClientRouter.DeleteAgent({ id }));
@@ -53,11 +56,33 @@ function RouteComponent() {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
     },
   });
+  const editAgentMutation = useMutation({
+    mutationFn: async ({id, newPrompt}: {id: string, newPrompt: string}) => {
+      return await rpc(ClientRouter.EditAgent({ id, newPrompt }));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agents', selectedEditAgent?.id]})
+      setShowEditForm(false);
+      setEditFormData({ newPrompt: '' });
+      setSelectedEditAgent(null);
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error('Failed to edit agent');
+    }
+  })
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.originalPrompt.trim()) return;
     createAgentMutation.mutate(formData);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editFormData.newPrompt.trim() || !selectedEditAgent) return;
+    editAgentMutation.mutate({id: selectedEditAgent.id.toString(), newPrompt: editFormData.newPrompt});
   };
 
   const handleDelete = (id: string) => {
@@ -159,6 +184,23 @@ function RouteComponent() {
           </div>
         )}
 
+        {
+          showEditForm && selectedEditAgent && (
+            <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+              <h3 className="text-lg font-semibold mb-4">Edit Agent {selectedEditAgent.name}'s core system prompt </h3>
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New System Prompt
+                  </label>
+                  <input type="text" name="newPrompt" value={editFormData.newPrompt} onChange={(e) => setEditFormData({ ...editFormData, newPrompt: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter the new system prompt" required />
+                </div>
+                <button type="submit" disabled={editAgentMutation.isPending} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"> {editAgentMutation.isPending ? 'Editing...' : 'Submit'} </button>
+              </form>
+            </div>
+          )
+        }
+
         <div className="p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
@@ -198,6 +240,11 @@ function RouteComponent() {
                         </span>
                       </div>
                     </div>
+                    <button onClick={() => { setShowEditForm(!showEditForm); setSelectedEditAgent(agent) }}
+                      className="ml-4 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 gap-x-2"
+                    >
+                      {showEditForm ? 'Cancel' : '+ Edit Agent'}
+                    </button>
                     <button
                       onClick={() => handleDelete(agent.id)}
                       disabled={deleteAgentMutation.isPending}

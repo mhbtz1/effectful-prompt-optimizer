@@ -37,6 +37,21 @@ const makeDataLayer = Effect.gen(function* () {
 
         }),
 
+        EditAgent: (args: { id: string, newPrompt: string }) => Effect.gen(function* (){
+            const output = Effect.tryPromise(async () => supabaseClient.from('agents').update({
+                original_prompt: args.newPrompt
+            }).eq('id', args.id)).pipe(
+                Effect.flatMap(output => {
+                    if (!output.error) {
+                        return Effect.succeed({key: "success" as const, value: output.data!})
+                    }
+                    return Effect.fail({key: "error" as const, value: "0"})
+                }),
+                Effect.catchAll(error => Effect.fail({key: "error" as const, value: "0"}))
+            )
+            return yield* output
+        }),
+
         GetAgent: (args: { id: string }) => Effect.gen(function* (){
             const output = Effect.tryPromise(async () => supabaseClient.from('agents').select('*').eq('id', args.id))
             return yield* output
