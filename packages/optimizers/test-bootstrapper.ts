@@ -1,5 +1,5 @@
 import { makeBootstrappingRepo } from "./repos/mipro.js"
-import { BootstrappingRepo } from "./services/mipro.js"
+import { BootstrappingRepo } from "./services/all-services.js"
 import { Effect } from "effect"
 import { callOpenRouter } from "../agents/src/openrouter.js"
 

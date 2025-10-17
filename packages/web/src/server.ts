@@ -10,7 +10,7 @@ import { AgentRpcs } from '../../agents/rpcs/chat/requests.js';
 import { AgentRpcsLive } from '../../agents/rpcs/chat/handlers.js';
 import { DataLayerRepo } from '../../data/src/data.js';
 import { makeMIProRepo } from '../../optimizers/repos/mipro.js';
-import { makeBootstrappingRepo } from '../../optimizers/repos/mipro.js';
+import { makeBootstrappingRepo } from '../../optimizers/repos/bootstrap.js';
 
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
