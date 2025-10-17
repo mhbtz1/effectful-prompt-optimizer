@@ -3,8 +3,9 @@ import { AgentRpcs } from './requests.js';
 import { DataLayerRepo } from '../../../data/src/data.js'
 import { callOpenRouter } from '../../src/openrouter.js';
 import { ModelSchema } from '../../src/models.js';
-import { makeMIProRepo, makeBootstrappingRepo } from '../../../optimizers/repos/mipro.js'
-import { OptimizerRepo } from '../../../optimizers/services/mipro.js';
+import { makeMIProRepo } from '../../../optimizers/repos/mipro.js'
+import { makeBootstrappingRepo } from '../../../optimizers/repos/bootstrap.js'
+import { OptimizerRepo } from '../../../optimizers/services/all-services.js';
 import { MODELS } from '../../src/models.js';
 
 export const AgentRpcsLive = AgentRpcs.toLayer({

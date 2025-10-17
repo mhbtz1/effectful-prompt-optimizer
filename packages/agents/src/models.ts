@@ -1,5 +1,5 @@
 import { Effect, Schema as S } from 'effect';
-import { type ModuleServiceProps } from '../../optimizers/services/mipro.js';
+import { type ModuleServiceProps } from '../../optimizers/services/all-services.js';
 import { callOpenRouter } from './openrouter.js';
 
 export const ModelSchema = S.Struct({
