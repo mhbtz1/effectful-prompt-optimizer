@@ -6,10 +6,10 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "pnpm run dev --filter=web",
-    "dev:web": "pnpm run dev --filter=web",
-    "dev:optimizers": "pnpm run dev --filter=optimizers",
-    "dev:agents": "pnpm run dev --filter=agents "
+    "dev": "pnpm --filter=web --filter=frontend --filter=agents dev",
+    "dev:web": "pnpm --filter=web dev",
+    "dev:optimizers": "pnpm --filter=optimizers dev",
+    "dev:agents": "pnpm --filter=agents dev"
   },
   "keywords": [],
   "author": "",

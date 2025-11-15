@@ -19,15 +19,8 @@ export class AgentRpcs extends RpcGroup.make(
     })
   }), 
   Rpc.make('EditAgent', {
-    success: S.Union(S.Struct({
-        key: S.Literal("success"),
-        value: S.String
-      }),
-    ),
-    error: S.Struct({
-        key: S.Literal("error"),
-        value: S.String
-    }),
+    success: S.Void,
+    error: S.Unknown,
     payload: S.Struct({
       id: S.String,
       newPrompt: S.String
@@ -88,17 +81,18 @@ export class AgentRpcs extends RpcGroup.make(
 
 
   Rpc.make('AgentOptimize', {
-    success: S.Array(S.Struct({
-      score: S.Number,
-      response: S.String
-    })),
+    success: S.Struct({
+      optimized_prompt: S.String,
+      contextMemory: S.Array(S.Struct({
+        type: S.Union(S.Literal("fact"), S.Literal("concept"), S.Literal("observation")),
+        content: S.String
+      })),
+      iterations: S.Number
+    }),
     error: S.Any,
     payload: S.Struct({
-      id: S.String,
-      model: S.String,
-      maxCount: S.Number,
-      studentModel: ModelSchema,
-      teacherModel: ModelSchema,
+      prompt: S.String,
+      agentId: S.String,
     })
   }),
 
@@ -124,6 +118,22 @@ export class AgentRpcs extends RpcGroup.make(
     payload: S.Struct({
       agentId: S.String,
       prompt: S.String,
+    })
+  }),
+
+  Rpc.make('OptimizePrompt', {
+    success: S.Struct({
+      optimized_prompt: S.String,
+      contextMemory: S.Array(S.Struct({
+        type: S.Union(S.Literal("fact"), S.Literal("concept"), S.Literal("observation")),
+        content: S.String
+      })),
+      iterations: S.Number
+    }),
+    error: S.Any,
+    payload: S.Struct({
+      prompt: S.String,
+      agentId: S.optional(S.String),
     })
   }),
 ) {}

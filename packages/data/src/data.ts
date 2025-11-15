@@ -18,7 +18,7 @@ const supabaseClient = createClient(supabaseUrl, supabaseKey);
 const makeDataLayer = Effect.gen(function* () {
     return {
         CreateAgent: (args: { name: string, originalPrompt: string }) => Effect.gen(function* (){
-            return yield* Effect.tryPromise(async () => supabaseClient.from('agents').insert({
+            return yield* Effect.tryPromise(async () => supabaseClient.from('agent-state').insert({
                 name: args.name,
                 original_prompt: args.originalPrompt,
                 current_prompt: args.originalPrompt,
@@ -38,27 +38,20 @@ const makeDataLayer = Effect.gen(function* () {
         }),
 
         EditAgent: (args: { id: string, newPrompt: string }) => Effect.gen(function* (){
-            const output = Effect.tryPromise(async () => supabaseClient.from('agents').update({
+            yield* Effect.logInfo(`id: ${args.id}, newPrompt: ${args.newPrompt}`)
+            yield* Effect.tryPromise(async () => supabaseClient.from('agent-state').update({
                 original_prompt: args.newPrompt
-            }).eq('id', args.id)).pipe(
-                Effect.flatMap(output => {
-                    if (!output.error) {
-                        return Effect.succeed({key: "success" as const, value: output.data!})
-                    }
-                    return Effect.fail({key: "error" as const, value: "0"})
-                }),
-                Effect.catchAll(error => Effect.fail({key: "error" as const, value: "0"}))
-            )
-            return yield* output
+            }).eq('id', args.id))
         }),
 
         GetAgent: (args: { id: string }) => Effect.gen(function* (){
-            const output = Effect.tryPromise(async () => supabaseClient.from('agents').select('*').eq('id', args.id))
-            return yield* output
+            const output = Effect.tryPromise(async () => supabaseClient.from('agent-state').select('*').eq('id', args.id))
+            const resp = yield* output;
+            return resp.data?.[0] ?? ''
         }),
 
         DeleteAgent: (args: { id: string }) => Effect.gen(function* (){
-            const output = Effect.tryPromise(async () => supabaseClient.from('agents').delete().eq('id', args.id)).pipe(
+            const output = Effect.tryPromise(async () => supabaseClient.from('agent-state').delete().eq('id', args.id)).pipe(
                 Effect.flatMap(output => {
                     if (!output.error) {
                         return Effect.succeed({key: "success" as const, value: output.data!})
@@ -71,7 +64,7 @@ const makeDataLayer = Effect.gen(function* () {
         }),
 
         ToggleAgent: (args: { id: string, toggle: boolean }) => Effect.gen(function* (){
-            const output = Effect.tryPromise(async () => supabaseClient.from('agents').update({
+            const output = Effect.tryPromise(async () => supabaseClient.from('agent-state').update({
                 toggle: args.toggle
             }).eq('id', args.id)).pipe(
                 Effect.flatMap(output => {
@@ -86,7 +79,7 @@ const makeDataLayer = Effect.gen(function* () {
         }),
 
         ListAgents: () => Effect.gen(function* (){
-            const output = yield* Effect.tryPromise(async () => supabaseClient.from('agents').select('*'))
+            const output = yield* Effect.tryPromise(async () => supabaseClient.from('agent-state').select('*'))
             if (!output.data) {
                 yield* Effect.fail("ERROR: LIST EMPTY")
             }
@@ -133,7 +126,17 @@ const makeDataLayer = Effect.gen(function* () {
                 supabaseClient.from('prompts').update({last_optimized: currentDate}).in('id', ids)
                 return prompts.data
             })
-        }
+        },
+
+        UpdateOptimizerState: (args: { id: string, deltas: string[] }) => Effect.gen(function* () {
+            return Effect.tryPromise(async () => {
+                const output = await supabaseClient.from('optimizer_state').update({deltas: args.deltas}).eq('id', args.id)
+                if (!output.error) {
+                    return {key: "success" as const, value: output.data!}
+                }
+                return {key: "error" as const, value: "0"}
+            })
+        })
 
         
     }

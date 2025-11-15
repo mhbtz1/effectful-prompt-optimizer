@@ -2,11 +2,8 @@ import { Effect } from 'effect';
 import { AgentRpcs } from './requests.js';
 import { DataLayerRepo } from '../../../data/src/data.js'
 import { callOpenRouter } from '../../src/openrouter.js';
-import { ModelSchema } from '../../src/models.js';
-import { makeMIProRepo } from '../../../optimizers/repos/mipro.js'
-import { makeBootstrappingRepo } from '../../../optimizers/repos/bootstrap.js'
-import { OptimizerRepo } from '../../../optimizers/services/all-services.js';
-import { MODELS } from '../../src/models.js';
+import { AceRepo } from '../../../optimizers/services/all-services.js';
+import { makeAceRepo, makeGeneratorRepo, makeReflectorRepo, makeCuratorRepo } from '../../../optimizers/repos/ace.js';
 
 export const AgentRpcsLive = AgentRpcs.toLayer({
     CreateAgent: (args: { name: string, originalPrompt: string }) => {
@@ -24,11 +21,10 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
     },
 
     EditAgent: (args: { id: string, newPrompt: string }) => {
-
         return Effect.gen(function* () {
             const service = yield* DataLayerRepo;
-            return yield* service.EditAgent(args)
-        }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('EditAgent'))
+            yield* service.EditAgent(args)
+        }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('EditAgent'), Effect.tapError(error => Effect.logError(error)), Effect.tapErrorCause(Effect.logError))
     },
 
     ToggleAgent: (args: { id: string, toggle: boolean }) => {
@@ -52,33 +48,30 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
         }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('ListAgents'))
     },
 
-    AgentOptimize: (args: { id: string, model: string, maxCount?: number, studentModel: ModelSchema, teacherModel: ModelSchema }) => {
-        let maxCount = args.maxCount;
-        if (!args.maxCount ) {
-            maxCount = 10
-        }
-
-        // policy for fetching prompts to optimize here 
+    AgentOptimize: (args: { prompt: string, agentId: string }) => {
+        // Reimplemented to use ACE optimization
         return Effect.gen(function* () {
-            const service = yield* DataLayerRepo;
-            const optimizerService = yield* OptimizerRepo;
+            const dataService = yield* DataLayerRepo;
+            const agent = yield* dataService.GetAgent({ id: args.agentId });
 
-            const prompts = yield* service.FetchAgentPrompts({id: args.id, maxCount: maxCount!})
-            const effects = prompts!.map(prompt => Effect.gen(function* () {
-                const studentModel = MODELS.get(args.studentModel.model) || MODELS.get("DEFAULT")!
-                const teacherModel = MODELS.get(args.teacherModel.model) || MODELS.get("DEFAULT")!
-                const response = yield* optimizerService.optimize(
-                    prompt,
-                    studentModel,   
-                    teacherModel, 
-                    undefined
-                ).pipe(Effect.provide(makeBootstrappingRepo))
+            // Use ACE optimization with the provided prompt
+            const aceService = yield* AceRepo;
+            yield* Effect.logInfo(`Optimizing prompt: ${args.prompt} for agent: ${args.agentId}`)
+            const result = yield* aceService.optimize(agent.current_prompt, args.prompt, 3);
 
-                return { score: 1, response: response.response }
-            }).pipe(Effect.provide(DataLayerRepo.Live), Effect.provide(makeMIProRepo), Effect.withSpan('AgentOptimize')))
-
-            return yield* Effect.all(effects, {concurrency: 10})
-        })
+            return {
+                optimized_prompt: result.finalResponse,
+                contextMemory: result.contextMemory,
+                iterations: result.iterations
+            };
+        }).pipe(
+            Effect.provide(DataLayerRepo.Live),
+            Effect.provide(makeAceRepo),
+            Effect.provide(makeGeneratorRepo),
+            Effect.provide(makeReflectorRepo),
+            Effect.provide(makeCuratorRepo),
+            Effect.withSpan('AgentOptimize')
+        )
     },
 
     AgentChat: (args: { prompt: string, model: string }) => {
@@ -88,6 +81,9 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
                     return await callOpenRouter({prompt: args.prompt, model: args.model})
                 })
                 yield* Effect.logInfo(`response: ${JSON.stringify(response)}`)
+                // run the ACE optimization process here after each response is received
+                // update the history of prompts received by the agent in the prompt_history column of the agent-state table
+
                 return response;
             } catch (error) {
                 yield* Effect.logInfo(`error: ${JSON.stringify(error)}`)
@@ -103,6 +99,34 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
             const service = yield* DataLayerRepo;
             return yield* service.SubmitAgentPrompt({agentId: args.agentId, prompt: args.prompt})
         }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('AgentSubmitPrompt'))
+    },
+
+    OptimizePrompt: (args: { prompt: string, agentId?: string }) => {
+        return Effect.gen(function* () {
+            // If agentId is provided, fetch the agent (could be used to customize optimization)
+            if (!args.agentId) {
+                return yield* Effect.fail(new Error('Agent ID is required'));
+            }
+            const dataService = yield* DataLayerRepo;
+            const agent = yield* dataService.GetAgent({ id: args.agentId });
+
+            // Use ACE optimization with the provided prompt
+            const aceService = yield* AceRepo;
+            const result = yield* aceService.optimize(agent.current_prompt, args.prompt, 3);
+
+            return {
+                optimized_prompt: result.finalResponse,
+                contextMemory: result.contextMemory,
+                iterations: result.iterations
+            };
+        }).pipe(
+            Effect.provide(DataLayerRepo.Live),
+            Effect.provide(makeAceRepo),
+            Effect.provide(makeGeneratorRepo),
+            Effect.provide(makeReflectorRepo),
+            Effect.provide(makeCuratorRepo),
+            Effect.withSpan('OptimizePrompt')
+        )
     },
 
 })

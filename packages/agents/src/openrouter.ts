@@ -19,7 +19,7 @@ export async function callOpenRouter({
   prompt,
   model,
   temperature = 0.7,
-  maxTokens = 1000,
+  maxTokens = 100000,
 }: {
   prompt: string;
   model: string;
@@ -39,6 +39,7 @@ export async function callOpenRouter({
       max_tokens: maxTokens,
     })
 
+    console.log(`query: ${prompt}`)
     const response = {
       response: completion.choices[0]?.message?.content || '',
       model: completion.model,

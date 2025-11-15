@@ -21,6 +21,7 @@ export interface ChatResponse {
 
 export interface OptimizeRequest {
   prompt: string;
+  agentId?: string;
   examples?: Array<{ input: string; output: string }>;
 }
 

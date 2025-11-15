@@ -1,20 +1,47 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { optimizeAPI } from '../api/client';
 import { Sparkles, Loader2, Copy, Check } from 'lucide-react';
+import { rpc } from '../rpc-client.js';
+import { ClientRouter } from '../client-router.js';
 
 export const Route = createFileRoute('/optimize')({
   component: OptimizeComponent,
 });
 
+type Agent = {
+  id: string;
+  name: string;
+  description: string;
+  userPrompt: string;
+  createdAt: string;
+  toggle: boolean;
+}
+
 function OptimizeComponent() {
   const [prompt, setPrompt] = useState('');
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
   const [copied, setCopied] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('');
+
+  const { data: agents, isLoading: agentsLoading } = useQuery({
+    queryKey: ['agents'],
+    queryFn: async () => {
+      return await rpc(ClientRouter.ListAgents({}));
+    },
+    refetchInterval: false,
+  });
 
   const optimizeMutation = useMutation({
-    mutationFn: optimizeAPI,
+    mutationFn: async () => {
+      if (selectedAgentId) {
+        return await rpc(ClientRouter.AgentOptimize({
+          prompt: prompt.trim(),
+          agentId: selectedAgentId 
+        }));
+      }
+    },
     onSuccess: (data) => {
       setOptimizedPrompt(data.optimized_prompt);
     },
@@ -23,8 +50,7 @@ function OptimizeComponent() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) return;
-
-    optimizeMutation.mutate({ prompt: prompt.trim() });
+    optimizeMutation.mutate();
   };
 
   const handleCopy = async () => {
@@ -45,6 +71,29 @@ function OptimizeComponent() {
 
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="agent" className="block text-sm font-medium text-gray-700 mb-2">
+                Select Agent
+              </label>
+              <select
+                id="agent"
+                value={selectedAgentId}
+                onChange={(e) => setSelectedAgentId(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                disabled={optimizeMutation.isPending || agentsLoading}
+              >
+                <option value="">Select an agent (optional)</option>
+                {agents?.map((agent: Agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
+              {agentsLoading && (
+                <p className="text-xs text-gray-500 mt-1">Loading agents...</p>
+              )}
+            </div>
+
             <div>
               <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
                 Enter your prompt
@@ -91,7 +140,7 @@ function OptimizeComponent() {
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Optimized Prompt
+                  Response
                 </label>
                 <button
                   onClick={handleCopy}

@@ -25,6 +25,7 @@ function RootComponent() {
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Chat
               </Link>
+
               <Link
                 to="/optimize"
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
@@ -54,7 +55,7 @@ function RootComponent() {
         </div>
       </nav>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Outlet />
+        <Outlet /> {/* child routes get rendered here */}
       </main>
     </div>
   );

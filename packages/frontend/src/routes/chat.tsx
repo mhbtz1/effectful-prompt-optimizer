@@ -5,7 +5,6 @@ import { type ChatMessage } from '../api/client';
 import { Send, Loader2, ChevronDown } from 'lucide-react';
 import { rpc } from '../rpc-client.js';
 import { ClientRouter } from '../client-router.js';
-import { Effect } from 'effect';
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/react';
 
 export const Route = createFileRoute('/chat')({
@@ -134,7 +133,7 @@ function ChatComponent() {
                     <>
                       <ListboxOption
                         value={null}
-                        className="relative cursor-pointer select-none py-2 px-3 data-[focus]:bg-gray-100 text-gray-900"
+                        className="relative cursor-pointer select-none py-2 px-3 data-[focus]:bg-gray-100 text-gray-900 [&:hover]:cursor-pointer"
                       >
                         {({ selected }) => (
                           <div>
@@ -148,7 +147,7 @@ function ChatComponent() {
                         <ListboxOption
                           key={agent.id}
                           value={agent}
-                          className="relative cursor-pointer select-none py-2 px-3 data-[focus]:bg-gray-100 text-gray-900"
+                          className="relative cursor-pointer select-none py-2 px-3 data-[focus]:bg-gray-100 text-gray-900 [&:hover]:cursor-pointer"
                         >
                           {({ selected }) => (
                             <div>
