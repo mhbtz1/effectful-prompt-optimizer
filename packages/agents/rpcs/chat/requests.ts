@@ -101,20 +101,14 @@ export class AgentRpcs extends RpcGroup.make(
     error: S.Any,
     payload: S.Struct({
       prompt: S.String,
-      model: S.String
+      model: S.String,
+      agentId: S.String
     })
   }),
 
   Rpc.make('AgentSubmitPrompt', {
-    success: S.Union(S.Struct({
-        key: S.Literal("success"),
-        value: S.String
-      }),
-    ),
-    error: S.Struct({
-        key: S.Literal("error"),
-        value: S.String
-    }),
+    success: S.Void,
+    error: S.Any,
     payload: S.Struct({
       agentId: S.String,
       prompt: S.String,

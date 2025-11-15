@@ -11,15 +11,14 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function callOpenRouter({
   prompt,
   model,
-  temperature = 0.7,
-  maxTokens = 100000,
+  temperature = 0.0,
+  maxTokens = 1000,
 }: {
   prompt: string;
   model: string;
