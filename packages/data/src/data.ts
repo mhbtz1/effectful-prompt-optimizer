@@ -97,21 +97,11 @@ const makeDataLayer = Effect.gen(function* () {
         }),
 
         SubmitAgentPrompt: (args: {agentId: string, prompt: string} ) => Effect.gen(function* (){
-            const output = Effect.tryPromise(async () => supabaseClient.from('prompts').insert({
+            yield* Effect.tryPromise(async () => supabaseClient.from('prompts').insert({
                 agent_id: args.agentId,
                 prompt: args.prompt,
                 last_optimized: new Date().toISOString()
-            })).pipe(
-                Effect.flatMap(output => {
-                    console.log(`output: ${JSON.stringify(output)}`)
-                    if (!output.error) {
-                        return Effect.succeed({key: "success" as const, value: "Prompt submitted successfully"})
-                    }
-                    return Effect.fail({key: "error" as const, value: "Failed to submit prompt"})
-                }),
-                Effect.catchAll(error => Effect.fail({key: "error" as const, value: "Failed to submit prompt"}))
-            )
-            return yield* output
+            }))
         }),
 
         FetchAgentPrompts: (args: {id: string, maxCount: number }) => {

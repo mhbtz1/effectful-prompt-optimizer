@@ -37,12 +37,13 @@ function ChatComponent() {
     mutationFn: async ({prompt, model}: {prompt: string, model?: string }) => {
       const response = await rpc(ClientRouter.AgentChat({
       prompt: prompt,
-      model: model || "alibaba/tongyi-deepresearch-30b-a3b:free"
+      model: (import.meta as any).env.VITE_DEFAULT_MODEL_NAME || "gpt-4o-mini",
+      agentId: selectedAgent?.id || ""
     }))
 
     console.log(`response: ${JSON.stringify(response)}`)
     return { role: "assistant", content: response.response }
-  
+
   },
     onSuccess: ({ role, content }: { role: string, content: string }) => {
       setMessages((prev) => [...prev, { role, content }]);
