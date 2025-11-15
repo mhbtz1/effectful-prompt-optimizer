@@ -13,6 +13,8 @@ type Agent = {
   id: string;
   name: string;
   description: string;
+  currentPrompt: string;
+  originalPrompt: string;
   userPrompt: string;
   createdAt: string;
   toggle: boolean;
@@ -192,9 +194,28 @@ function RouteComponent() {
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    New System Prompt
-                    <input type="text" name="newPrompt" value={editFormData.newPrompt} onChange={(e) => setEditFormData({ ...editFormData, newPrompt: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter the new system prompt" required />
+                    Current System Prompt
                   </label>
+                  <textarea
+                    value={selectedEditAgent.originalPrompt}
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed"
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New System Prompt
+                  </label>
+                  <textarea
+                    name="newPrompt"
+                    value={editFormData.newPrompt}
+                    onChange={(e) => setEditFormData({ ...editFormData, newPrompt: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter the new system prompt"
+                    rows={4}
+                    required
+                  />
                 </div>
                 <div className="flex space-x-3">
                   <button type="submit" disabled={editAgentMutation.isPending} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"> {editAgentMutation.isPending ? 'Editing...' : 'Submit'} </button>
