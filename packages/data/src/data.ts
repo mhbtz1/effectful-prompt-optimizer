@@ -18,7 +18,7 @@ const supabaseClient = createClient(supabaseUrl, supabaseKey);
 const makeDataLayer = Effect.gen(function* () {
     return {
         CreateAgent: (args: { name: string, originalPrompt: string }) => Effect.gen(function* (){
-            return yield* Effect.tryPromise(async () => supabaseClient.from('agent-state').insert({
+            yield* Effect.tryPromise(async () => supabaseClient.from('agent-state').insert({
                 name: args.name,
                 original_prompt: args.originalPrompt,
                 current_prompt: args.originalPrompt,
@@ -64,18 +64,9 @@ const makeDataLayer = Effect.gen(function* () {
         }),
 
         ToggleAgent: (args: { id: string, toggle: boolean }) => Effect.gen(function* (){
-            const output = Effect.tryPromise(async () => supabaseClient.from('agent-state').update({
+            yield* Effect.tryPromise(async () => supabaseClient.from('agent-state').update({
                 toggle: args.toggle
-            }).eq('id', args.id)).pipe(
-                Effect.flatMap(output => {
-                    if (!output.error) {
-                        return Effect.succeed({key: "success" as const, value: output.data!})
-                    }
-                    return Effect.fail({key: "error" as const, value: "0"})
-                }),
-                Effect.catchAll(error => Effect.fail({key: "error" as const, value: "0"}))
-            )
-            return yield* output
+            }).eq('id', args.id))
         }),
 
         ListAgents: () => Effect.gen(function* (){
