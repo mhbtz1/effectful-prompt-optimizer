@@ -43,10 +43,11 @@ export const makeAceRepo = Layer.succeed(AceRepo, {
 
         const revisedSystemPrompt = yield* Effect.tryPromise(async () => callOpenRouter({
             prompt: `You are a helpful assistant that generates a response to a query. 
-            The query is: <SYSTEM_PROMPT>${systemPrompt}</SYSTEM_PROMPT><QUERY>${prompt}</QUERY>. 
+            The current system prompt is: <ORIGINAL_SYSTEM_PROMPT>${systemPrompt}</ORIGINAL_SYSTEM_PROMPT>
             The context memory is: ${contextMemory.map(item => item.content).join(", ")} 
             The final response is the following: ${finalResponse.response}. 
-            You must generate a revised system prompt, taking into account the compiled memory, the final response generated, and the initial system prompt. You should align the initial intent with the system prompt while making minor edits that better reflect the query made by the user.`,
+            You must generate a revised system prompt, taking into account the compiled memory, the final response generated, and the initial system prompt. 
+            You should make sure to not lose the initial intent of the ORIGINAL_SYSTEM_PROMPT while making minor edits to better reflect the current generated response.`,
             model: process.env.DEFAULT_MODEL_NAME!,
             temperature: 0.7,
             maxTokens: 1000
