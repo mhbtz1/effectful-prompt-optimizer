@@ -9,7 +9,7 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
     CreateAgent: (args: { name: string, originalPrompt: string }) => {
         return Effect.gen(function* () {
             const service = yield* DataLayerRepo;
-            return yield* service.CreateAgent(args)
+            yield* service.CreateAgent(args)
         }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('CreateAgent'))
     },
 
@@ -30,7 +30,7 @@ export const AgentRpcsLive = AgentRpcs.toLayer({
     ToggleAgent: (args: { id: string, toggle: boolean }) => {
         return Effect.gen(function* () {
             const service = yield* DataLayerRepo;
-            return yield* service.ToggleAgent(args)
+            yield* service.ToggleAgent(args)
         }).pipe(Effect.provide(DataLayerRepo.Live), Effect.withSpan('ToggleAgent'))
     },
 

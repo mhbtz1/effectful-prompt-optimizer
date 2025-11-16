@@ -4,15 +4,8 @@ import { ModelSchema } from '../../../agents/src/model-schema.js';
 
 export class AgentRpcs extends RpcGroup.make(
   Rpc.make('CreateAgent', {
-    success: S.Union(S.Struct({
-        key: S.Literal("success"),
-        value: S.String
-      }),
-    ),
-    error: S.Struct({
-        key: S.Literal("error"),
-        value: S.String
-    }),
+    success: S.Void,
+    error: S.Any,
     payload: S.Struct({
       name: S.String,
       originalPrompt: S.String
@@ -43,15 +36,8 @@ export class AgentRpcs extends RpcGroup.make(
   }),
 
   Rpc.make('ToggleAgent', {
-    success: S.Union(S.Struct({
-        key: S.Literal("success"),
-        value: S.String
-      }),
-    ),
-    error: S.Struct({
-        key: S.Literal("error"),
-        value: S.String
-    }),
+    success: S.Void,
+    error: S.Any,
     payload: S.Struct({
       id: S.String,
       toggle: S.Boolean,
