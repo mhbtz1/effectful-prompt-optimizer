@@ -6,6 +6,11 @@ export default defineConfig({
   plugins: [TanStackRouterVite(), react()],
   server: {
     port: 5173,
+    host: '0.0.0.0',
+  },
+  preview: {
+    port: 5173,
+    host: '0.0.0.0',
   },
   define: {
     'import.meta.env.VITE_DEFAULT_MODEL_NAME': JSON.stringify(process.env.DEFAULT_MODEL_NAME),

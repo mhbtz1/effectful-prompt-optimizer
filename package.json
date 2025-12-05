@@ -19,6 +19,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@effect/platform": "^0.92.1",
     "@types/node": "^24.7.1"
   }
 }
