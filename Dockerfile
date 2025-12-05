@@ -36,7 +36,7 @@ EXPOSE 3000 5173
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'set -e' >> /app/start.sh && \
     echo 'echo "Starting frontend preview server on port 5173..."' >> /app/start.sh && \
-    echo 'cd /app/packages/frontend && pnpm preview --host 0.0.0.0 --port 5173 &' >> /app/start.sh && \
+    echo 'cd /app/packages/frontend && pnpx serve -s dist -l 5173 &' >> /app/start.sh && \
     echo 'FRONTEND_PID=$!' >> /app/start.sh && \
     echo 'echo "Frontend started with PID $FRONTEND_PID"' >> /app/start.sh && \
     echo 'echo "Starting backend server on port 3000..."' >> /app/start.sh && \

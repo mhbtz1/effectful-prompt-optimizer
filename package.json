@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@effect/platform": "^0.92.1",
-    "@types/node": "^24.7.1"
+    "@types/node": "^24.7.1",
+    "serve": "^14.2.5"
   }
 }
