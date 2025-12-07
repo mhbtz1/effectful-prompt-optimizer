@@ -45,6 +45,3 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "Backend started with PID $BACKEND_PID"' >> /app/start.sh && \
     echo 'wait $FRONTEND_PID $BACKEND_PID' >> /app/start.sh && \
     chmod +x /app/start.sh
-
-# Start both services
-CMD ["/bin/sh", "/app/start.sh"]
