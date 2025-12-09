@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 
 export const Route = createFileRoute('/toggle')({
   component: ToggleComponent,
-});
+})
 
 interface Agent {
   id: string;
