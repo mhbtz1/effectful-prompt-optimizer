@@ -29,9 +29,7 @@ COPY . .
 # Build frontend static assets
 RUN pnpm --filter=frontend build
 
-# Expose both ports
 EXPOSE 3000 5173
-
 # Create start script to run both services
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'set -e' >> /app/start.sh && \
