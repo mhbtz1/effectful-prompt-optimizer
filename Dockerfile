@@ -30,16 +30,9 @@ COPY . .
 RUN pnpm --filter=frontend build
 
 EXPOSE 3000 5173
-# Create start script to run both services
-RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'set -e' >> /app/start.sh && \
-    echo 'echo "Starting frontend preview server on port 5173..."' >> /app/start.sh && \
-    echo 'cd /app/packages/frontend && pnpx serve -s dist -l 5173 &' >> /app/start.sh && \
-    echo 'FRONTEND_PID=$!' >> /app/start.sh && \
-    echo 'echo "Frontend started with PID $FRONTEND_PID"' >> /app/start.sh && \
-    echo 'echo "Starting backend server on port 3000..."' >> /app/start.sh && \
-    echo 'cd /app/packages/web && pnpx tsx src/server.ts &' >> /app/start.sh && \
-    echo 'BACKEND_PID=$!' >> /app/start.sh && \
-    echo 'echo "Backend started with PID $BACKEND_PID"' >> /app/start.sh && \
-    echo 'wait $FRONTEND_PID $BACKEND_PID' >> /app/start.sh && \
-    chmod +x /app/start.sh
+
+# Copy and set up start script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]
