@@ -29,7 +29,7 @@ COPY . .
 # Build frontend static assets
 RUN pnpm --filter=frontend build
 
-EXPOSE 3000 5173
+EXPOSE 5173
 
 # Copy and set up start script
 COPY start.sh /app/start.sh

@@ -5,8 +5,12 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [TanStackRouterVite(), react()],
   server: {
-    port: 3000,
-    host: '0.0.0.0',
+    proxy: {
+      '/rpc': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    }
   },
   preview: {
     port: 5173,
