@@ -17,13 +17,12 @@ const credentialsIncludedClient = FetchHttpClient.layer.pipe(
 */
 
 // Get API URL from environment, fallback to localhost for development
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const rpc = (effect: Effect.Effect<any, any, Protocol | Scope>) => {
   const eff = effect.pipe(
     Effect.provide(
       RpcClient.layerProtocolHttp({
-        url: `${API_URL}/rpc/agents`,
+        url: `/rpc/agents`,
       }).pipe(
         Layer.provide([
           FetchHttpClient.layer,
@@ -40,7 +39,7 @@ export const unauthedRpc = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(
     Effect.provide(
       RpcClient.layerProtocolHttp({
-        url: `${API_URL}/rpc/agents`,
+        url: `/rpc/agents`,
       }).pipe(
         Layer.provide([
           FetchHttpClient.layer,
@@ -55,7 +54,7 @@ export const streamRpc = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(
     Effect.provide(
       RpcClient.layerProtocolHttp({
-        url: `${API_URL}/rpc/agents`,
+        url: `/rpc/agents`,
       }).pipe(
         Layer.provide([
           FetchHttpClient.layer,
