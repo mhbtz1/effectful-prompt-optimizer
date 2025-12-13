@@ -2,9 +2,9 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install pnpm
+# Install pnpm and nginx
 RUN corepack enable && corepack prepare pnpm@10.17.1 --activate
-RUN apt-get update && apt-get install -y sudo
+RUN apt-get update && apt-get install -y sudo nginx
 RUN sudo apt-get update && sudo apt-get install -y gcc g++ make build-essential procps
 
 # Copy pnpm workspace configuration
@@ -29,7 +29,10 @@ COPY . .
 # Build frontend static assets
 RUN pnpm --filter=frontend build
 
-EXPOSE 5173
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 8080
 
 # Copy and set up start script
 COPY start.sh /app/start.sh
