@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ToggleRouteImport } from './routes/toggle'
 import { Route as OptimizeRouteImport } from './routes/optimize'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const ToggleRoute = ToggleRouteImport.update({
 const OptimizeRoute = OptimizeRouteImport.update({
   id: '/optimize',
   path: '/optimize',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
   '/chat': typeof ChatRoute
+  '/login': typeof LoginRoute
   '/optimize': typeof OptimizeRoute
   '/toggle': typeof ToggleRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
   '/chat': typeof ChatRoute
+  '/login': typeof LoginRoute
   '/optimize': typeof OptimizeRoute
   '/toggle': typeof ToggleRoute
 }
@@ -60,21 +68,30 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
   '/chat': typeof ChatRoute
+  '/login': typeof LoginRoute
   '/optimize': typeof OptimizeRoute
   '/toggle': typeof ToggleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agents' | '/chat' | '/optimize' | '/toggle'
+  fullPaths: '/' | '/agents' | '/chat' | '/login' | '/optimize' | '/toggle'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/chat' | '/optimize' | '/toggle'
-  id: '__root__' | '/' | '/agents' | '/chat' | '/optimize' | '/toggle'
+  to: '/' | '/agents' | '/chat' | '/login' | '/optimize' | '/toggle'
+  id:
+    | '__root__'
+    | '/'
+    | '/agents'
+    | '/chat'
+    | '/login'
+    | '/optimize'
+    | '/toggle'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentsRoute: typeof AgentsRoute
   ChatRoute: typeof ChatRoute
+  LoginRoute: typeof LoginRoute
   OptimizeRoute: typeof OptimizeRoute
   ToggleRoute: typeof ToggleRoute
 }
@@ -93,6 +110,13 @@ declare module '@tanstack/react-router' {
       path: '/optimize'
       fullPath: '/optimize'
       preLoaderRoute: typeof OptimizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -123,6 +147,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentsRoute: AgentsRoute,
   ChatRoute: ChatRoute,
+  LoginRoute: LoginRoute,
   OptimizeRoute: OptimizeRoute,
   ToggleRoute: ToggleRoute,
 }

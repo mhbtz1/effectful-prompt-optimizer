@@ -65,7 +65,7 @@ function OptimizeComponent() {
         <div className="border-b border-gray-200 px-6 py-4">
           <h2 className="text-2xl font-bold text-gray-900">Optimize Prompt</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Improve your prompts using AI optimization
+            Improve your agents with context-aware optimization
           </p>
         </div>
 
@@ -105,7 +105,7 @@ function OptimizeComponent() {
                 rows={6}
                 placeholder="Enter the prompt you want to optimize..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                disabled={optimizeMutation.isPending}
+                disabled={optimizeMutation.isPending} 
               />
             </div>
 

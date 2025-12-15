@@ -1,6 +1,17 @@
 import { Effect, Context, Data, Layer } from 'effect';
 import { GeneratorRepo, ReflectorRepo, CuratorRepo, AceRepo, ContextItemSchema } from '../services/all-services.js';
 import { callOpenRouter } from '../../agents/src/openrouter.js';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Load environment variables from root .env file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
+console.log(`process.env.OPENAI_API_KEY: ${process.env.OPENAI_API_KEY}`)
+console.log(`process.env.DEFAULT_MODEL_NAME: ${process.env.DEFAULT_MODEL_NAME}`)
 
 class AceException extends Data.TaggedError("AceException")<{}> {}
 
@@ -36,7 +47,8 @@ export const makeAceRepo = Layer.succeed(AceRepo, {
 
         const finalResponse = yield* Effect.tryPromise(async () => callOpenRouter({
             prompt: `You are a helpful assistant that generates a response to a query. The query is: <SYSTEM_PROMPT>${systemPrompt}</SYSTEM_PROMPT><QUERY>${prompt}</QUERY>. The context memory is: ${contextMemory.map(item => item.content).join(", ")}. You must generate a final response to the query, providing just an answer given the query and the compiled context memory.`,
-            model: process.env.DEFAULT_MODEL_NAME!,
+            model: process.env.VITE_DEFAULT_MODEL_NAME!,
+            apiKey: process.env.OPENAI_API_KEY!,
             temperature: 0.7,
             maxTokens: 1000
         }));
@@ -50,6 +62,7 @@ export const makeAceRepo = Layer.succeed(AceRepo, {
             You should make sure to not lose the initial intent of the ORIGINAL_SYSTEM_PROMPT while making minor edits to better reflect the current generated response.`,
             model: process.env.DEFAULT_MODEL_NAME!,
             temperature: 0.7,
+            apiKey: process.env.OPENAI_API_KEY!,
             maxTokens: 1000
         }));
 
@@ -74,6 +87,7 @@ export const makeGeneratorRepo = Layer.succeed(GeneratorRepo, {
             prompt: `<SYSTEM_PROMPT> ${systemPrompt} </SYSTEM_PROMPT> <QUERY> ${query} </QUERY> <CONTEXT_MEMORY> ${contextMemory.map(item => item.content).join(", ")} </CONTEXT_MEMORY>. Now, you must generate a trajectory for properly answering the following query, providing a list of strategies to answer the query and outputting this in your final response.
             The trajectory you output should be formatted in a comma delimited list of strategies that can easily be parsed into a list.`,
             model: process.env.DEFAULT_MODEL_NAME!,
+            apiKey: process.env.OPENAI_API_KEY!,
             temperature: 0.7,
             maxTokens: 1000
         }));
@@ -97,6 +111,7 @@ export const makeReflectorRepo = Layer.succeed(ReflectorRepo, {
             You must synthesize these values into a list of insights which can be used by a curator step to generate delta context items that can be used to further clarify the query.
             Output your context items in a comma delimited list that can easily be parsed / split into a list of context items.`,
             model: process.env.DEFAULT_MODEL_NAME!,
+            apiKey: process.env.OPENAI_API_KEY!,
             temperature: 0.7,
             maxTokens: 1000
         }));
@@ -120,6 +135,7 @@ export const makeCuratorRepo = Layer.succeed(CuratorRepo, {
             You must synthesize these values into a list of contex items that can be used to ground / improve the agent's ability to answer the query.
             Output your context items in a comma delimited list that can easily be parsed / split into a list of context items.`,
             model: process.env.DEFAULT_MODEL_NAME!,
+            apiKey: process.env.OPENAI_API_KEY!,
             temperature: 0.7,
             maxTokens: 1000
         }));

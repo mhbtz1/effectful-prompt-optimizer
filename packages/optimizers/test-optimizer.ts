@@ -7,10 +7,7 @@ import { OptimizerRepo, BootstrappingRepo } from "./services/all-services.js";
 import type { UnknownException } from "effect/Cause";
 import dotenv from 'dotenv';
 
-dotenv.config();
-
-const modelName = process.env.VITE_DEFAULT_MODEL_NAME ?? 'alibaba/tongyi-deepresearch-30b-a3b:free'
-
+const modelName = process.env.VITE_DEFAULT_MODEL_NAME!
 
 const exampleProgram = Effect.gen(function* () {
     return {
@@ -20,6 +17,7 @@ const exampleProgram = Effect.gen(function* () {
                 const response = await callOpenRouter({
                     prompt: formattedPrompt,
                     model: modelName,
+                    apiKey: process.env.OPENAI_API_KEY!,
                     temperature: 0.7,
                     maxTokens: 1000,
                 })

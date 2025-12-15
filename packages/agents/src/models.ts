@@ -17,6 +17,7 @@ MODELS.set("ONE", {
             const response = await callOpenRouter({
                 prompt: `Answer the prompt, and provide reasoning for your answer in a numbered list: ${prompt}`,
                 model: "alibaba/tongyi-deepresearch-30b-a3b:free",
+                apiKey: process.env.OPENAI_API_KEY!,
                 temperature: 0.7,
                 maxTokens: 1000
             })
@@ -30,6 +31,7 @@ MODELS.set("TWO", {
             const response = await callOpenRouter({
                 prompt: `Answer the following prompt to the best of your ability: ${prompt}`,
                 model: "alibaba/tongyi-deepresearch-30b-a3b:free",
+                apiKey: process.env.OPENAI_API_KEY!,
                 temperature: 0.7,
                 maxTokens: 1000
             })
@@ -43,6 +45,7 @@ MODELS.set("DEFAULT", {
             const response = await callOpenRouter({
                 prompt: `Answer the following prompt to the best of your ability: ${prompt}`,
                 model: "alibaba/tongyi-deepresearch-30b-a3b:free",
+                apiKey: process.env.OPENAI_API_KEY!,
                 temperature: 0.7,
                 maxTokens: 1000
             })

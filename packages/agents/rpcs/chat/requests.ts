@@ -19,16 +19,15 @@ export class AgentRpcs extends RpcGroup.make(
       newPrompt: S.String
     })
   }),
-  
   Rpc.make('DeleteAgent', {
     success: S.Union(S.Struct({
         key: S.Literal("success"),
-        value: S.String
+        value: S.NullOr(S.String)
       }),
     ),
     error: S.Struct({
         key: S.Literal("error"),
-        value: S.String
+        value: S.NullOr(S.String)
     }),
     payload: S.Struct({
       id: S.String,
@@ -83,12 +82,15 @@ export class AgentRpcs extends RpcGroup.make(
   }),
 
   Rpc.make('AgentChat', {
-    success: S.Any,
+    success: S.Struct({
+      response: S.String,
+    }),
     error: S.Any,
     payload: S.Struct({
       prompt: S.String,
       model: S.String,
-      agentId: S.String
+      agentId: S.String,
+      conversationId: S.String
     })
   }),
 
@@ -96,8 +98,10 @@ export class AgentRpcs extends RpcGroup.make(
     success: S.Void,
     error: S.Any,
     payload: S.Struct({
+      role: S.String,
       agentId: S.String,
       prompt: S.String,
+      conversationId: S.String,
     })
   }),
 

@@ -1,9 +1,17 @@
 import { defineConfig } from 'vite';
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
 
 export default defineConfig({
-  plugins: [TanStackRouterVite(), react()],
+  plugins: [TanStackRouterVite(), react(), tailwindcss()],
+  envDir: path.resolve(__dirname, '../../'),
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   server: {
     proxy: {
       '/rpc': {
@@ -11,12 +19,5 @@ export default defineConfig({
         changeOrigin: true,
       },
     }
-  },
-  preview: {
-    port: 5173,
-    host: '0.0.0.0',
-  },
-  define: {
-    'import.meta.env.VITE_DEFAULT_MODEL_NAME': JSON.stringify(process.env.DEFAULT_MODEL_NAME),
-  },
+  }
 });

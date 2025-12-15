@@ -4,30 +4,28 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load .env from root directory
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function callOpenRouter({
   prompt,
   model,
+  apiKey,
   temperature = 0.0,
   maxTokens = 1000,
 }: {
   prompt: string;
   model: string;
+  apiKey: string;
   temperature?: number;
   maxTokens?: number;
 }) {
-  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
-  // Add user prompt
+  console.log(`apiKey: ${apiKey}`)
+  
+  const openai = new OpenAI({
+    apiKey
+  });
+  
+  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
   messages.push({ role: 'user', content: prompt });
 
   try {
@@ -38,13 +36,11 @@ export async function callOpenRouter({
       max_tokens: maxTokens,
     })
 
-    console.log(`query: ${prompt}`)
     const response = {
       response: completion.choices[0]?.message?.content || '',
       model: completion.model,
     };
 
-    console.log(`response: ${JSON.stringify(response)}`)
     return response
   } catch (error) {
     throw new Error(`OpenAI API Error: ${error instanceof Error ? error.message : String(error)}`);

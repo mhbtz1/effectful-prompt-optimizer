@@ -28,6 +28,7 @@ const exampleProgram = Effect.gen(function* () {
                 const response = await callOpenRouter({
                     prompt: formattedPrompt,
                     model: "alibaba/tongyi-deepresearch-30b-a3b:free",
+                    apiKey: process.env.OPENAI_API_KEY!,
                     temperature: 0.7,
                     maxTokens: 1000,
                 })

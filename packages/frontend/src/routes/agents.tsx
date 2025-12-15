@@ -38,7 +38,9 @@ function RouteComponent() {
     queryFn: async () => {
       return await rpc(ClientRouter.ListAgents({}));
     },
-    refetchInterval: false,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const createAgentMutation = useMutation({
@@ -47,24 +49,34 @@ function RouteComponent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
+      toast.success('Agent created successfully');
       setFormData({ name: '', originalPrompt: '' });
       setShowCreateForm(false);
     },
   });
+
   const deleteAgentMutation = useMutation({
     mutationFn: async (id: string) => {
       return await rpc(ClientRouter.DeleteAgent({ id }));
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Delete success:', data);
       queryClient.invalidateQueries({ queryKey: ['agents'] });
+      toast.success('Agent deleted successfully');
+    },
+    onError: (error) => {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete agent');
     },
   });
+
   const editAgentMutation = useMutation({
     mutationFn: async ({id, newPrompt}: {id: string, newPrompt: string}) => {
       return await rpc(ClientRouter.EditAgent({ id, newPrompt }));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['agents', selectedEditAgent?.id]})
+      queryClient.invalidateQueries({ queryKey: ['agents'] });
+      toast.success('Agent updated successfully');
       setShowEditForm(false);
       setEditFormData({ newPrompt: '' });
       setSelectedEditAgent(null);

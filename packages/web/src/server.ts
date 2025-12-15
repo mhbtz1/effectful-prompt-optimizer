@@ -8,7 +8,10 @@ import { createServer } from 'node:http';
 
 import { AgentRpcs } from '../../agents/rpcs/chat/requests.js';
 import { AgentRpcsLive } from '../../agents/rpcs/chat/handlers.js';
+import { ConversationRpcs } from '../../agents/rpcs/conversations/requests.js';
+import { ConversationRpcsLive } from '../../agents/rpcs/conversations/handlers.js';
 import { DataLayerRepo } from '../../data/src/data.js';
+import { ConversationDataLayerRepo } from '../../data/src/conversations/data.js';
 import { makeMIProRepo } from '../../optimizers/repos/mipro.js';
 import { makeBootstrappingRepo } from '../../optimizers/repos/bootstrap.js';
 
@@ -71,7 +74,8 @@ const optionsResponse = Effect.gen(function* () {
 const OPTIONRoutes = HttpRouter.empty.pipe(
     HttpRouter.options("/rpc/chat", optionsResponse),
     HttpRouter.options("/rpc/optimize", optionsResponse),
-    HttpRouter.options("/rpc/agents", optionsResponse)
+    HttpRouter.options("/rpc/agents", optionsResponse),
+    HttpRouter.options("/rpc/conversations", optionsResponse)
 )
 
 const POSTRoutes = HttpRouter.empty.pipe(
@@ -81,6 +85,11 @@ const POSTRoutes = HttpRouter.empty.pipe(
       Effect.provide(RpcSerialization.layerNdjson),
       Effect.provide(makeMIProRepo),
       Effect.provide(makeBootstrappingRepo),
+      Effect.flatten)),
+  HttpRouter.post("/rpc/conversations", RpcServer.toHttpApp(ConversationRpcs).pipe(
+      Effect.provide(ConversationRpcsLive),
+      Effect.provide(ConversationDataLayerRepo.Live),
+      Effect.provide(RpcSerialization.layerNdjson),
       Effect.flatten))
 )
 

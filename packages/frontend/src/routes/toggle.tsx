@@ -5,6 +5,7 @@ import { rpc } from '../rpc-client.js';
 import { ClientRouter } from '../client-router.js';
 import { Switch } from '@headlessui/react';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/toggle')({
   component: ToggleComponent,
@@ -28,14 +29,34 @@ function ToggleComponent() {
     queryFn: async () => {
       return await rpc(ClientRouter.ListAgents({}));
     },
-    refetchInterval: 5000,
+    staleTime: 1000,
+    refetchOnWindowFocus: true,
   });
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, toggle }: { id: string; toggle: boolean }) => {
       return await rpc(ClientRouter.ToggleAgent({ id, toggle }));
     },
+    onMutate: async ({ id, toggle }) => {
+      // Cancel any outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ['agents'] });
+      
+      // Snapshot the previous value
+      const previousAgents = queryClient.getQueryData<Agent[]>(['agents']);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData<Agent[]>(['agents'], (old) => {
+        if (!old) return old;
+        return old.map(agent => 
+          agent.id === id 
+            ? { ...agent, toggle } 
+            : agent
+        );
+      });
+      
+    },
     onSuccess: () => {
+      // Refetch to ensure sync with server
       queryClient.invalidateQueries({ queryKey: ['agents'] });
     },
   });
@@ -92,20 +113,20 @@ function ToggleComponent() {
                           {agent.toggle ? 'Enabled' : 'Disabled'}
                         </p>
                       </div>
-                      <Switch
-                        checked={agent.toggle}
-                        onChange={() => handleToggle(agent.id, agent.toggle)}
-                        disabled={toggleMutation.isPending}
-                        className={`${
-                          agent.toggle ? 'bg-green-600' : 'bg-gray-300'
-                        } relative inline-flex h-7 w-12 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        <span
+                        <Switch
+                          checked={agent.toggle}
+                          onChange={() => handleToggle(agent.id, agent.toggle)}
+                          disabled={toggleMutation.isPending}
                           className={`${
-                            agent.toggle ? 'translate-x-6' : 'translate-x-1'
-                          } inline-block h-5 w-5 transform rounded-full bg-white transition-transform`}
-                        />
-                      </Switch>
+                            agent.toggle ? 'bg-green-600' : 'bg-gray-300'
+                          } relative inline-flex h-7 w-12 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          <span
+                            className={`${
+                              agent.toggle ? 'translate-x-6' : 'translate-x-1'
+                            } inline-block h-5 w-5 transform rounded-full bg-white transition-transform`}
+                          />
+                        </Switch>
                     </div>
                   </div>
                 </div>

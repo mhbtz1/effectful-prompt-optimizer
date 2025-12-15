@@ -63,3 +63,20 @@ export const streamRpc = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
       ),
     ),
   );
+
+export const conversationRpc = (effect: Effect.Effect<any, any, Protocol | Scope>) => {
+  const eff = effect.pipe(
+    Effect.provide(
+      RpcClient.layerProtocolHttp({
+        url: `/rpc/conversations`,
+      }).pipe(
+        Layer.provide([
+          FetchHttpClient.layer,
+          RpcSerialization.layerNdjson,
+        ]),
+      ),
+    ),
+    Effect.scoped,
+  )
+  return Effect.runPromise(eff)
+}
